@@ -1,47 +1,68 @@
 import kivy
-kivy.require('1.10.0')
+kivy.require('1.11.0')
 
+import threading
+import time
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.image import Image
+from kivy.uix.image import AsyncImage
 from kivy.uix.slider import Slider
 from kivy.clock import Clock
 from kivy.uix.pagelayout import PageLayout
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.spinner import Spinner
-from kivy.uix.image import Image
 from kivy.uix.label import Label
-from kivy.uix.slider import Slider
-from kivy.clock import Clock
 from kivy.graphics import Color, Rectangle
-from kivy.properties import StringProperty
+from kivy.properties import StringProperty, NumericProperty, ListProperty
 from kivy.graphics.instructions import Callback
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition, SlideTransition
-import RPi.GPIO as GPIO
+from kivy.uix.scrollview import ScrollView
+#import RPi.GPIO as GPIO
 from kivy.lang.builder import Builder
 
 from souptest import statusdetect
+import requests
+from bs4 import BeautifulSoup,SoupStrainer
+from tables import * 
+import datetime
+import os
+
+class Event(IsDescription):
+    GraceID=StringCol(30)
+    AlertType=StringCol(30)
+    Instruments = StringCol(30)
+    FAR = StringCol(30)
+    skymap=StringCol(30)
+    Group=StringCol(30)
+    BNS=StringCol(30)
+    NSBH=StringCol(30)
+    BBH=StringCol(30)
+    Terrestrial = StringCol(30)
+    HasNS=StringCol(30)
+    HasRemnant=StringCol(30)
+
+#FIXME: DECLARE ALL GPIO PINS AND INITIAL INS/OUTS HERE
+
 
 
 Builder.load_file('GWalarm.kv',rulesonly=True)
 
-
-
 class MainButton(Button):
-	def nav(self):
-		app=App.get_running_app()
-		if self.id=='history':
-			app.root.current='history'
-		elif self.id=='status':
-			app.root.current='status'
-		elif self.id=='main':
-			app.root.current='main'
+    def nav(self):
+        app=App.get_running_app()
+        if self.id=='history':
+            app.root.current='history'
+        elif self.id=='status':
+            app.root.current='status'
+        elif self.id=='main':
+            app.root.current='main'
+        elif self.id=='plots':
+            app.root.current='plots'
 class MainScreen(Screen):
 	def __init__(self,**kwargs):
-		super(MainScreen,self).__init__(**kwargs)
+		super().__init__(**kwargs)
 		layout=GridLayout(cols=2,rows=2,padding=30,spacing=30,row_default_height=150)
 		with layout.canvas.before:
 			Color(.2,.2,.2,1)
@@ -54,66 +75,170 @@ class MainScreen(Screen):
 		quitButton.bind(on_press=exit)
 
 		self.add_widget(layout)
-		ids=('history','status')
-		texts=('Event History','Detector Status')
+		ids=('history','status','plots')
+		texts=('Event History','Detector Status','Test Plots')
 		for i in range(0,len(ids)):
 			hbut = MainButton(text=texts[i],id=ids[i])
 			layout.add_widget(hbut)
+
 		layout.add_widget(quitButton)
 
 class HistoryScreen(Screen):
-	def __init__(self,**kwargs):
-		super(HistoryScreen,self).__init__(**kwargs)
-		button2 =MainButton(text='Main Menu',id='main')
-		self.add_widget(button2)
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        layout = GridLayout(rows=2)
+        self.add_widget(layout)
+        hisScroll = ScrollView(do_scroll_x=False,size_hint=(1,None))
+        layout.add_widget(hisScroll)
+        button2 =MainButton(text='Main Menu',id='main')
+        hisScroll.add_widget(button2)
+        
+        t2 = threading.Thread(target=historyUpdate,args=(HistoryScreen,),daemon=True)
+        t2.start()
+    
+    
+class DetGrid(GridLayout):
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+            
+class DetLabel(Label):
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        with self.canvas.before:
+            Color([0,0,0,0])
+        
 
 class NestedBox(BoxLayout):
 	pass
 
-class DetLabel(Label):
-	detname = StringProperty()
-	detstat = NumericProperty()
-	dettime = StringProperty()
+def historyUpdate(obj):
+    try:
+        os.chdir("./event_data")
+    except:
+        os.mkdir("./event_data")
+        os.chdir("./event_data")
+        
+    #initial check to ensure file exists with necessary groupings
+    h5file = open_file("Event Database",mode="a",title="eventinfo")
+    try:
+        h5file.create_group("/","events")
+    except NodeError:
+        pass
+    h5file.close()
+    
+    while True:
+        h5file = open_file("Event Database",mode="a",title="eventinfo")
+#       
+        
+        
+        h5file.close()
+        
+        time.sleep(60)
+        
+        
 
-	
-
+def statusupdate(obj):
+    while True:
+        (detnames,stats,dettimes) = statusdetect()
+        
+        names = ['GEO 600', 'LIGO Hanford', 'LIGO Livingston']
+        order = [dettimes,detnames,names]
+        j=0
+        for child in obj.children:
+            if stats[j] != 2:
+                child.current_color=[1-stats[j],0,stats[j],1]
+            else:
+                child.current_color=[0,1,0,1]
+            with child.canvas:
+                    Color(rgba=child.current_color)
+            i=0
+            for label in child.children:
+                label.text=order[i][j]
+                i+=1
+            j+=1
+    
+        time.sleep(30)
+        
 class StatusScreen(Screen):
-	def __init__(self,**kwargs):
-		super(StatusScreen,self).__init__(**kwargs)
-		layout = GridLayout(cols=1,rows=2,spacing=30,padding=30,default_row_height=150)
-		with layout.canvas.before:
-			Color(.2,.2,.2,1)
-			self.rect=Rectangle(size=(800,600),pos=layout.pos)
-#Clock.schedule_interval(statusdetect,60)
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        layout = GridLayout(cols=1,rows=2,spacing=30,padding=30, row_default_height=150)
+        with layout.canvas.before:
+            Color(.2,.2,.2,1)
+            self.rect=Rectangle(size=(800,600),pos=layout.pos)
 
-		self.add_widget(layout)
+        self.add_widget(layout)
 
-		detLay = NestedBox()
+        detLay = NestedBox()
 
-		det1layout = GridLayout(cols=3,spacing=10,padding=10)
-		det2layout=GridLayout(cols=3,spacing=10,padding=10)
-		det3layout=GridLayout(cols=3,spacing=10,padding=10)
+        for i in range(0,3):
+            lay = DetGrid(cols=3,spacing=10,padding=10)
+            for j in range(0,3):
+                box = DetLabel(text='test'+str(j))
+                lay.add_widget(box)
+            with lay.canvas.before:
+                lay.col = Color(1,0,1,0)
+                lay.rect=Rectangle(pos=lay.pos)
+            detLay.add_widget(lay)
+            
+        layout.add_widget(detLay)        
 
-		layout.add_widget(detLay)
-		detLay.add_widget(det1layout)
-		detLay.add_widget(det2layout)
-		detLay.add_widget(det3layout)
+        t = threading.Thread(target=statusupdate,args=(detLay,),daemon=True)
+        t.start()
 
-		statids = ['test1','test2','test3']
+        button3 = MainButton(text='Main Menu',id='main')
+        layout.add_widget(button3)
 
-		(detectornames,statuses,detectortimes) = statusdetect(
-
-		button3 = MainButton(text='Main Menu',id='main')
-		layout.add_widget(button3)
+class PlotsScreen(Screen):
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        layout=GridLayout(rows=2)
+        self.add_widget(layout)
+        
+        date = datetime.datetime.today()
+        sort_date = [str(date.year),str(date.month).zfill(2),str(date.day).zfill(2)]
+        datestring = sort_date[0]+sort_date[1]+sort_date[2]
+        url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
+        
+        resp=requests.get(url)
+        r = resp.text
+        soup=BeautifulSoup(r,"lxml")
+        
+        sources=[]
+        descripts=[]
+        
+        for link in soup.find_all("a"):
+            linkstr = str(link.get("href"))
+            if 'png' in linkstr:
+                sources.append(linkstr)
+                descripts.append(str(link.get("title")))
+        
+        wimg=AsyncImage(source=sources[0])
+        button4 = MainButton(text='Main Menu',id='main')
+        layout.add_widget(button4)
+        layout.add_widget(wimg)
 
 sm = ScreenManager()
 sm.add_widget(MainScreen(name='main'))
 sm.add_widget(HistoryScreen(name='history'))
 sm.add_widget(StatusScreen(name='status'))
+sm.add_widget(PlotsScreen(name='plots'))
 
 class MyApp(App):
 	def build(self):
 		return sm
 
+#Spyder test functionality
+def reset():
+    import kivy.core.window as window
+    from kivy.base import EventLoop
+    if not EventLoop.event_listeners:
+        from kivy.cache import Cache
+        window.Window = window.core_select_lib('window', window.window_impl, True)
+        Cache.print_usage()
+        for cat in Cache._categories:
+            Cache._objects[cat] = {}
+
 if __name__ == '__main__':
-	MyApp().run()
+    reset()
+    MyApp().run()

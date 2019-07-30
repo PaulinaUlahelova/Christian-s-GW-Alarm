@@ -7,12 +7,9 @@ Created on Wed Jul 24 12:21:39 2019
 """
 
 import gcn
-#import healpy as hp
 from tables import *
-#import numpy as np
-#import ligo.skymap
 import os
-#import re
+import struct
 
 class Event(IsDescription):
     GraceID=StringCol(30)
@@ -64,7 +61,6 @@ def process_gcn(payload, root):
 
     # Respond only to 'CBC' events. Change 'CBC' to "Burst'
     # to respond to only unmodeled burst events.
-    
     if params['AlertType'] == 'Retraction':
         #Remove the event info if a retraction is issued - we don't care anymore
         #FIXME: in future flag the event instead and display seperately for interest/ref
@@ -83,8 +79,8 @@ def process_gcn(payload, root):
     fitspath = './map_to_convert.fits.gz'
     skymap = params['GraceID']+'.png'
     
-    os.system("curl -0 "+filepath + '> ' + fitspath)
-    os.system("ligo-skymap-plot map_to_convert.fits.gz"+" -o "+skymap+" --annotate --contour 50 90 --geo")
+    #os.system("curl -0 "+filepath + '> ' + fitspath)
+    #os.system("ligo-skymap-plot map_to_convert.fits.gz"+" -o "+skymap+" --annotate --contour 50 90 --geo")
 
     #group name: events
     #first-time special case, for if group not made
@@ -94,7 +90,6 @@ def process_gcn(payload, root):
         pass
     try:
         table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
-        print("ok")
     except:
 #        for leaf in h5file.root.events._f_walknodes('Leaf'):
 #            s = str(leaf)
@@ -117,6 +112,7 @@ def process_gcn(payload, root):
         except:
             continue
     det_event['skymap'] = skymap
+    
 
  #   if 'skymap_fits' in params:
   #      # Read the HEALPix sky map and the FITS header.
@@ -127,13 +123,15 @@ def process_gcn(payload, root):
         # Print some values from the FITS header.
     #    print('Distance =', header['DISTMEAN'], '+/-', header['DISTSTD'])
         
+    det_event.append()
     table.flush()
     h5file.close()
     
-gcn.listen(handler=process_gcn)
+#gcn.listen(host="209.208.78.170",handler=process_gcn)
+        
         
 #testing
-#import lxml
-#payload = open('MS181101ab-1-Preliminary.xml', 'rb').read()
-#root = lxml.etree.fromstring(payload)
-#process_gcn(payload, root)
+import lxml
+payload = open('MS181101ab-1-Preliminary.xml', 'rb').read()
+root = lxml.etree.fromstring(payload)
+process_gcn(payload, root)

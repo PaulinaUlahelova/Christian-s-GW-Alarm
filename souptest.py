@@ -3,7 +3,6 @@ def statusdetect():
 	from bs4 import BeautifulSoup 
 	import requests 
 	import re
-	import kivy
 
 	url = "https://ldas-jobs.ligo.caltech.edu/~gwistat/gwistat/gwistat.html"
 	r =requests.get(url) 
@@ -37,8 +36,7 @@ def statusdetect():
 				detectortimes.append(res)
 				res=''
 				break
-		once = 0
-
+            
 		finalcheck = ['Detector','Status','Duration','']
 
 		if res not in finalcheck:

@@ -1,5 +1,15 @@
 #:kivy 1.10.0
 
+<DetGrid@GridLayout>:
+    current_color: (0,0,0,0)
+
+    canvas.before:
+        Color:
+            rgba: self.current_color
+        Rectangle:
+            size:self.size
+            pos:self.pos
+
 <MainButton@Button>:
 	on_press:self.nav()
 
