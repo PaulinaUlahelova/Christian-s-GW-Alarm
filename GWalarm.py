@@ -7,7 +7,7 @@ from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.image import Image
+from kivy.uix.image import AsyncImage,Image
 from kivy.uix.slider import Slider
 from kivy.clock import Clock
 from kivy.uix.pagelayout import PageLayout
@@ -19,7 +19,7 @@ from kivy.properties import StringProperty, NumericProperty, ListProperty
 from kivy.graphics.instructions import Callback
 from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition, SlideTransition
 from kivy.uix.scrollview import ScrollView
-from kivy.uix.scatter import Scatter
+from kivy.uix.carousel import Carousel
 
 #import RPi.GPIO as GPIO
 from kivy.lang.builder import Builder
@@ -109,6 +109,8 @@ class DetLabel(Label):
         with self.canvas.before:
             Color([0,0,0,0])
         
+class WrapLabel(Label):
+    pass
 
 class NestedBox(BoxLayout):
 	pass
@@ -176,11 +178,16 @@ def plotupdate(obj):
         datestring = sort_date[0]+sort_date[1]+sort_date[2]
         url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
         
-        #grab the soup and pzrse for links + descripts
-        resp=requests.get(url)
-        r = resp.text
-        soup=BeautifulSoup(r,"lxml")
+        #grab the soup and parse for links + descripts
+        try:
+            resp=requests.get(url)
+            r = resp.text
+            soup=BeautifulSoup(r,"lxml")
+        except:
+            print("URL Error: URL to the Range plots is broken : check online")
         
+        obj.clear_widgets()
+                
         sources=[]
         descripts=[]
         for link in soup.find_all("a"):
@@ -188,15 +195,24 @@ def plotupdate(obj):
             if 'png' in linkstr:
                 sources.append('https://www.gw-openscience.org'+linkstr)
                 descripts.append(str(link.get("title")))
-        filepaths =[]
+
         for i in range(0,len(sources)):
-            filepaths.append('Detector_Plot_'+str(i)+'.png')
-        j=0
-        for source in sources:
-            os.system("curl -0 "+ source + ' > ' + filepaths[j])
-            j+=1
+            lay = GridLayout(rows=2,padding=15)
+            filepath = 'Detector_Plot_'+str(i)+'.png'
+            os.system("curl -0 "+ sources[i] + ' > ' + filepath)
+            img = AsyncImage(source = filepath,size_hint_y=0.8)
+            desc = WrapLabel(text=descripts[i])
+            obj.add_widget(lay)
+            lay.add_widget(img)
+            lay.add_widget(desc)
             
+        #j=0
+        #for source in sources:
+        #    os.system("curl -0 "+ source + ' > ' + filepaths[j])
+        #    j+=1
+
         time.sleep(3600)
+        
 class StatusScreen(Screen):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
@@ -231,23 +247,21 @@ class PlotsScreen(Screen):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
         layout=GridLayout(rows=2)
-        layout2=GridLayout(rows=2)
+        carousel = Carousel(direction='right')
+        #layout2=GridLayout(rows=2)
         
         self.add_widget(layout)
-        layout.add_widget(layout2)
+        layout.add_widget(carousel)
+        #carousel.add_widget(layout2)
         
-        plot_handle = Scatter(do_rotation=False,do_translation=False,scale_min=3,scale_max=10)
-        current_plot = Image(size=(800,600),source='./event_data/Detector_Plot_0.png')
-        current_desc = Label(text='Nothing yet...')
-        
-        layout2.add_widget(plot_handle)
-        plot_handle.add_widget(current_plot)
-        layout2.add_widget(current_desc)
-        
-        t3 = threading.Thread(target=plotupdate,args=(layout,),daemon=True)
+#        current_plot = Image(source='./event_data/Detector_Plot_0.png')
+#        current_desc = Label(text='Nothing yet...',size_hint_y=None,height=75)
+#        
+#        layout2.add_widget(current_plot)
+#        layout2.add_widget(current_desc)
+#        
+        t3 = threading.Thread(target=plotupdate,args=(carousel,),daemon=True)
         t3.start()
-        
-        
         
         button4 = MainButton(text='Main Menu',id='main',size_hint_y=None,height=25)
         layout.add_widget(button4)
