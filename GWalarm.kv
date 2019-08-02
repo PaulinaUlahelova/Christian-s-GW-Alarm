@@ -1,13 +1,38 @@
-#:kivy 1.10.0
+#:kivy 1.11.0
 
 <WrapLabel@Label>:
+    canvas.before:
+        Color:
+            rgba: 0.2,0.25,0.4,1
+        Rectangle:
+            size:self.size
+            pos:self.pos    
+        Line:
+            width: 2
+            rectangle: self.x, self.y, self.width, self.height
     text_size: root.width, None
     size_hint_y: 0.2
     halign: 'center'
     valign: 'middle'
     font_size: 14
     
-
+    
+<HistoryScreen@Screen>:
+    canvas.before:
+        Color:
+            rgba: 1,1,1,1
+        Rectangle:
+            size:self.size
+            pos:self.pos    
+    
+<PlotsScreen@Screen>:
+    canvas.before:
+        Color:
+            rgba: 1,1,1,1
+        Rectangle:
+            size:self.size
+            pos:self.pos    
+    
 <DetGrid@GridLayout>:
     current_color: (0,0,0,0)
 
@@ -24,3 +49,10 @@
 <NestedBox@BoxLayout>:
 	orientation: 'vertical'
 	spacing:10
+
+<EventContainer@GridLayout>:
+    on_press:self.details()
+    
+<RV@RecycleView>:
+    viewclass:'EventContainer'
+        

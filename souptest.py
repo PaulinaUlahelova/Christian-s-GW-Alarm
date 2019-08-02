@@ -44,7 +44,7 @@ def statusdetect():
 
 		statuses=[]
 		for element in detectornames:
-			if element == 'Observing':
+			if element in ['Observing','Science']:
 				statuses.append(2)
 			elif element == 'Down':
 				statuses.append(0)
@@ -55,4 +55,4 @@ def statusdetect():
 #	obj.detectornames=detectornames
 #	obj.statuses=statuses,
 #	obj.detectortimes=detectortimes
-
+#print(statusdetect())
