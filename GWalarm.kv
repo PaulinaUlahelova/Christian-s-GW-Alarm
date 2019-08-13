@@ -1,30 +1,349 @@
 #:kivy 1.11.0
 
 <WrapLabel@Label>:
+    text_size: root.width, None
+    size:self.texture_size
+    halign: 'center'
+    valign: 'middle'
+    font_size: 14
+    
+<HisColLabel@Label>:
+    imgsource:'./neutral.png'
+    sorttype:
+    newsort:
     canvas.before:
         Color:
             rgba: 0.2,0.25,0.4,1
         Rectangle:
             size:self.size
             pos:self.pos    
+    canvas:
+        Color:
+            rgba: 0.2,0.2,0.2,1
         Line:
-            width: 2
-            rectangle: self.x, self.y, self.width, self.height
+            width: 1
+            rectangle: self.x, self.y, self.width, 2
+    canvas.after:
+        Rectangle:
+            pos:self.pos[0]+self.width*0.87,self.pos[1]+self.height*0.25
+            size:self.width*0.13,self.height*0.5
+            source:root.imgsource
     text_size: root.width, None
-    size_hint_y: 0.2
+    size:self.texture_size
     halign: 'center'
     valign: 'middle'
     font_size: 14
     
+<DetectLabel@ButtonBehavior+Label>:
+    valign:'top'
+    iam: 'Button'
+    color:(0,0,0,1)
+    bg_col:(1,1,1,1)
+    canvas.before:
+        Color:
+            rgba: self.bg_col
+        Rectangle:
+            pos:self.pos
+            size:self.size
+
+<StatusScreenv2@Screen>:
+    det1props: ['test1','test2','test3',[1,0,1,1]]
+    det2props: ['test1','test2','test3',[1,0,1,1]]
+    det3props: ['test1','test2','test3',[1,0,1,1]]
+    det4props: ['test1','test2','test3',[1,0,1,1]]
+    det5props: ['test1','test2','test3',[1,0,1,1]]
+
+    GridLayout:
+        canvas.before:
+            Color:
+                rgba:238/255,238/255,235/255,1
+            Rectangle:
+                size:self.size
+                pos:self.pos
+        rows:3
+        BoxLayout:
+            size_hint_y:0.1
+            BoxLayout:
+                DetectLabel:
+                    bg_col:root.det1props[3]
+                    text:root.det1props[0]
+                    on_press:root.retract(self)
+                    valign:'top'
+                DetectLabel:
+                    bg_col:root.det1props[3]
+                    text:root.det1props[1]
+                    on_press:root.retract(self)
+                    valign:'top'
+                    
+                DetectLabel:
+                    bg_col:root.det1props[3]
+                    text:root.det1props[2]
+                    on_press:root.retract(self)
+                    valign:'top'
+            BoxLayout    
+                DetectLabel:
+                    bg_col:root.det2props[3]
+                    text:root.det2props[0]
+                    on_press:root.retract(self)
+                    valign:'top'
+                DetectLabel:
+                    bg_col:root.det2props[3]
+                    text:root.det2props[1]
+                    on_press:root.retract(self)
+                    valign:'top'
+                DetectLabel:
+                    bg_col:root.det2props[3]
+                    text:root.det2props[2]
+                    on_press:root.retract(self)
+                    valign:'top'
+        GridLayout:
+            cols:2
+            GridLayout:
+                rows:3
+                Label:
+                    text:'Detector Network'
+                WrapLabel:
+                    text:'Detector spiel here: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pretium interdum orci quis condimentum. Nunc cursus lorem dolor, at auctor velit aliquet et. Suspendisse potenti. Donec ac hendrerit ex. Maecenas et lectus dapibus, lacinia quam eget, consectetur elit. Donec non imperdiet quam, in imperdiet est. Suspendisse laoreet elementum libero a semper. Duis in molestie tortor, id interdum urna. Sed ultrices nisl at elit facilisis, ac scelerisque mi lacinia. Pellentesque eu orci at quam porta bibendum at et risus. Nam sed risus bibendum, convallis augue ut, suscipit eros. Ut viverra nec odio sit amet pulvinar. Aenean lorem purus, mollis in elementum ac, porttitor eget diam. '
+                Button:
+                    on_press:root.manager.current='main'
+                    text:'Main menu'
+                    size_hint_y:0.1
+            AsyncImage:
+                source:"./Detector_Plot_3.png"
+                
+        BoxLayout:
+            size_hint_y:0.1
+            BoxLayout:
+                DetectLabel:
+                    bg_col:root.det3props[3]
+                    text:root.det3props[0]
+                    on_press:root.retract(self)
+                    valign:'bottom'
+                DetectLabel:
+                    bg_col:root.det3props[3]
+                    text:root.det3props[1]
+                    on_press:root.retract(self)
+                    valign:'bottom'
+                DetectLabel:
+                    bg_col:root.det3props[3]
+                    text:root.det3props[2]
+                    on_press:root.retract(self)
+                    valign:'bottom'
+            BoxLayout:
+                DetectLabel:
+                    bg_col:root.det4props[3]
+                    text:root.det4props[0]
+                    on_press:root.retract(self)
+                DetectLabel:
+                    bg_col:root.det4props[3]
+                    text:root.det4props[1]
+                    on_press:root.retract(self)
+                    valign:'bottom'
+                DetectLabel:
+                    bg_col:root.det4props[3]
+                    text:root.det4props[2]
+                    on_press:root.retract(self)
+                    
+            BoxLayout:
+                DetectLabel:
+                    bg_col:root.det5props[3]
+                    text:root.det5props[0]
+                    on_press:root.retract(self)
+                    valign:'bottom'
+                DetectLabel:
+                    bg_col:root.det5props[3]
+                    text:root.det5props[1]
+                    on_press:root.retract(self)
+                    valign:'bottom'
+                DetectLabel:
+                    bg_col:root.det5props[3]
+                    text:root.det5props[2]
+                    on_press:root.retract(self)
+                    valign:'bottom'
+
+<StatBio@Screen>:
+    GridLayout:
+        cols:2
+        BoxLayout:
+            Label:
+                text:'Title'
+            Label:
+                text:'Status'
+            Label:
+                text:'Bio: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pretium interdum orci quis condimentum. Nunc cursus lorem dolor, at auctor velit aliquet et. Suspendisse potenti. Donec ac hendrerit ex. Maecenas et lectus dapibus, lacinia quam eget, consectetur elit. Donec non imperdiet quam, in imperdiet est. Suspendisse laoreet elementum libero a semper. Duis in molestie tortor, id interdum urna. Sed ultrices nisl at elit facilisis, ac scelerisque mi lacinia. Pellentesque eu orci at quam porta bibendum at et risus. Nam sed risus bibendum, convallis augue ut, suscipit eros. Ut viverra nec odio sit amet pulvinar. Aenean lorem purus, mollis in elementum ac, porttitor eget diam. '
+            Button:
+                text:'Return to Detector Summary'
+                on_press:root.change()
+                size_hint_y:0.1
+        AsyncImage:
+            source:None
+
+<GlossDefLabel@Label>:
+    size_hint_y:None
+    text_size: root.width, None
+    height:self.texture_size[1]
+    halign: 'justify'
+    font_size:12
+    line_height:0.9
+    markup:True
     
 <HistoryScreen@Screen>:
-    canvas.before:
+    canvas:
         Color:
             rgba: 1,1,1,1
         Rectangle:
             size:self.size
             pos:self.pos    
+
+<InfoLabel@Label>:
+    bg_col:(0,0,0,0)
+    color:(1,1,1,1)
+    canvas.before:
+        Color:
+            rgba:self.bg_col
+        Rectangle:
+            size:self.size
+            pos:self.pos
     
+
+<InfoPop@Popup>:
+    part1info:['HasRemnant','HasNS']
+    part2info:['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision']
+    part3info:['BBH','BNS','NSBH','MassGap','Terrestrial']
+    
+    namelist: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS']
+    row: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS']
+    rowdict:dict(zip(self.namelist,self.row))
+    
+    background_color: [.2,.2,.4,1]
+    size_hint:(0.97,0.97)
+    
+    Carousel:
+        GridLayout:
+            cols:3
+            GridLayout:
+                size_hint:(0.2,1)
+                rows:3 
+                padding: 10,2
+                canvas.after:
+                    Color:
+                        rgba: 0.6,0.6,0.6,1 
+                    Line:
+                        width:1
+                        rectangle: self.x, self.y, self.width, self.height
+                Label:
+                    text:'Glossary'
+                    size_hint_y:0.1
+                Glossary:
+                    size_hint:(1,0.8)
+                Button:
+                    text:'Exit Info Scrn'
+                    size_hint_y:0.1
+                    on_press:root.dismiss()
+            GridLayout:
+                rows:3
+                size_hint:(0.3,1)
+                BoxLayout:
+                    size_hint_y:0.15
+                    canvas.after:
+                        Color:
+                            rgba:1,0,0,1
+                        Line:
+                            width:2
+                            rectangle: self.x+1, self.y+1, self.width+1, self.height+1
+                        
+                    orientation:'vertical'
+                    InfoLabel:
+                        text:root.part1info[0] + ':' + root.rowdict[root.part1info[0]]    
+                        bg_col:(188/255,189/255,34/255,1)  
+                    InfoLabel:
+                        text:root.part1info[1] + ':' + root.rowdict[root.part1info[1]]
+                        bg_col:(23/255,190/255,207/255,1)
+                        
+                GridLayout:
+                    rows: len(root.part2info)
+                    size_hint_y:0.45
+                    canvas.before:
+                        Color:
+                            rgba: (0.2,0.2,0.2,1)
+                        Rectangle:
+                            size:self.size
+                            pos:self.pos
+                    InfoLabel:
+                        text:root.part2info[0] + ':' + root.rowdict[root.part2info[0]]
+                    InfoLabel:
+                        text:root.part2info[1] + ':' + root.rowdict[root.part2info[1]]
+                    InfoLabel:
+                        text: root.part2info[2] + ':' + root.rowdict[root.part2info[2]]
+                    InfoLabel:
+                        text:root.part2info[3] + ':' + root.rowdict[root.part2info[3]]
+                    InfoLabel:
+                        text: root.part2info[4] + ':' + root.rowdict[root.part2info[4]]
+                    InfoLabel:
+                        text:root.part2info[5] + ':' + root.rowdict[root.part2info[5]]
+                GridLayout:
+                    size_hint_y:0.4
+                    rows: len(root.part3info)
+                    canvas.after:
+                        Color:
+                            rgba:0,0,1,1
+                        Line:
+                            width:2
+                            rectangle: self.x, self.y, self.width, self.height
+                    InfoLabel:
+                        text:root.part3info[0] + ':' + root.rowdict[root.part3info[0]]
+                        bg_col:(44/255,160/255,44/255,1)
+                    InfoLabel:
+                        text:root.part3info[1] + ':' + root.rowdict[root.part3info[1]]
+                        bg_col:(31/255,119/255,180/255,1)
+                    InfoLabel:
+                        text: root.part3info[2] + ':' + root.rowdict[root.part3info[2]]
+                        bg_col:(1,127/255,14/255,1)
+                    InfoLabel:
+                        text:root.part3info[3] + ':' + root.rowdict[root.part3info[3]]
+                        bg_col:(214/255,39/255,40/255,1)
+                    InfoLabel:
+                        text: root.part3info[4] + ':' + root.rowdict[root.part3info[4]]
+                        bg_col:(148/255,103/255,189/255,1)
+    
+            GridLayout:
+                spacing:10
+                rows:2
+                size_hint:(0.4,1)
+                canvas.before:
+                    Color:
+                        rgba: 1,1,1,1
+                    Rectangle:
+                        size:self.size
+                        pos:self.pos
+
+                BoxLayout:
+                    size_hint:(1,0.3)
+                    canvas.after:
+                        Color:
+                            rgba: 1,0,0,1
+                        Line:
+                            width:2
+                            rectangle: self.x+1, self.y+1, self.width+1, self.height+1
+                            
+                    AsyncImage:
+                        source:root.rowdict['GraceID']+'_bar.png'
+
+                BoxLayout:
+                    size_hint:(1,0.7)
+                    canvas.after:
+                        Color:
+                            rgba: 0,0,1,1
+                        Line:
+                            width:2 
+                            rectangle: self.x+1, self.y+1, self.width+1, self.height+1
+                    AsyncImage:
+                        source:root.rowdict['GraceID']+'_pie.png'
+        AsyncImage:
+            source:root.rowdict['skymap']
+            
+        
+        
 <PlotsScreen@Screen>:
     canvas.before:
         Color:
@@ -41,18 +360,53 @@
             rgba: self.current_color
         Rectangle:
             size:self.size
-            pos:self.pos
+            pos:self.pos        
 
+<GlossLabel@GridLayout>:
+    rows:2
+    orientation:'vertical'
+    nom:'tobereplaced'
+    desc:'tobereplaced'
+    padding:(3,10)
+    spacing:(0,3)
+
+    GlossDefLabel:
+        text:'[b][u]'+root.nom+'[/b][/u] \n' + root.desc
+        valign:'top'
 <MainButton@Button>:
 	on_press:self.nav()
-
-<NestedBox@BoxLayout>:
-	orientation: 'vertical'
-	spacing:10
+	
+<HisMainLabel@Label>:
+    color:0,0,0,1
+    font_size:14
 
 <EventContainer@GridLayout>:
-    on_press:self.details()
-    
-<RV@RecycleView>:
-    viewclass:'EventContainer'
-        
+    name: None
+    text0:'tobereplaced'
+    text1:'tobereplaced'
+    text2:'tobereplaced'
+    text3:'tobereplaced'
+    text4:'tobereplaced'
+    on_press: self.details()
+    canvas.before:
+        Color:
+            rgba: 0.9,0.9,0.9,1
+        Rectangle:
+            pos:self.pos
+            size:self.size
+    canvas:
+        Color:
+            rgba:0.2,0.2,0.2,0.4
+        Line:
+            width: 1
+            rectangle: self.x, self.y, self.width, self.height
+    HisMainLabel:
+        text:root.text0      
+    HisMainLabel:
+        text:root.text1
+    HisMainLabel:
+        text:root.text2
+    HisMainLabel:
+        text:root.text3
+    HisMainLabel:
+        text:root.text4
