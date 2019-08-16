@@ -162,9 +162,7 @@ class MainScreen(Screen):
                                        str(line))
                     return result.group(1)
                 eventid = search(file)
-                print(str(eventid))
                 for tab in h5file.list_nodes("/events"):
-                    print(tab.name)
                     if str(tab.name) in eventid:
                         new_event_table=tab
 #                    if tab.name == eventid:
@@ -189,7 +187,6 @@ class HisColLabel(ToggleButtonBehavior,Label):
     primed=NumericProperty()
     
     def on_press(self):
-#        self.primed = 1
         for child in self.parent.children:
             child.imgsource='./neutral.png'
     
@@ -198,7 +195,6 @@ class HisColLabel(ToggleButtonBehavior,Label):
     def on_state_for_real(self,widget,value):
         print('Pressed' )
         print(self.primed)
-#        if self.primed == 1:
         global flag
         flag = 1
         if value == 'down':
@@ -208,14 +204,9 @@ class HisColLabel(ToggleButtonBehavior,Label):
         else:
             self.newsort = self.sorttype+' Ascending'
             self.imgsource='./descending.png'
-        #time.sleep(0.1)
         t2 = threading.Thread(target=historyUpdate,args=(App.get_running_app().root.children[0].children[0].children[1].children[0],
                                                          self.names,self.specialnames,self.newsort),daemon=True)
         t2.start()
-#        elif self.primed == 0:
-#            self.imgsource='./neutral.png'
-#        self.primed=0
-
 
 class HistoryScreen(Screen):    
     def __init__(self,**kwargs):
@@ -279,6 +270,8 @@ class HistoryScreen(Screen):
         
         smalls=BoxLayout(size_hint_y=0.1)
         def refresh_all(arg):
+            global main_flag
+            main_flag = 1
             App.get_running_app().stop()
             App.get_running_app().root_window.close()
             print('shutdown')
@@ -298,46 +291,37 @@ class HistoryScreen(Screen):
             
         backupTestButton.bind(on_press=stupid) 
          
-        button2 =MainButton(text='Main Menu',name='main')#,size_hint_y=0.1)
+        button2 =MainButton(text='Main Menu',name='main')
         smalls.add_widget(button2)
         layout.add_widget(smalls)
-
-class DetGrid(GridLayout):
-    def __init__(self,**kwargs):
-        super().__init__(**kwargs)
-            
-class DetLabel(Label):
-    def __init__(self,**kwargs):
-        super().__init__(**kwargs)
-        with self.canvas.before:
-            Color([0,0,0,0])
         
-class WrapLabel(Label):
-    pass
-
 class HeadingLabel(ToggleButtonBehavior,Label):
     def on_state(self,widget,value):
         if value == 'down':
             print('down')
         else:
             print('up')
-    pass
 
 class InfoPop(Popup):
     namelist=ObjectProperty()
     row=ObjectProperty()
+    def gloss_open(self):
+        content = GridLayout(rows=2)
+        content.add_widget(Glossary(size_hint_y=0.9))
+        but = Button(text='Done',size_hint_y=0.1)
+        content.add_widget(but)
+        pop = Popup(title='Glossary',content=content,size_hint=(0.25,1),pos_hint={'x':0,'y':0})
+        but.bind(on_press=pop.dismiss)
+        pop.open()
         
-class GlossLabel(BoxLayout):
+class GlossDefLabel(Label):
     nom=ObjectProperty()
     desc=ObjectProperty()
+    
 
 class Glossary(ScrollView):
-    descs = ListProperty()
-    namelist = ListProperty()
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-        Clock.schedule_once(self.finish_init,0)
-    def finish_init(self,dt):
         descdict = {'GraceID': 'Identifier in GraceDB', 'AlertType': 'VOEvent alert type', 
             'Instruments': 'List of instruments used in analysis to identify this event', 
             'FAR': 'False alarm rate for GW candidates with this strength or greater', 
@@ -358,21 +342,17 @@ class Glossary(ScrollView):
         for key,value in descdict.items():
             names.append(key)
             descripts.append(value)
-        self.namelist = sorted(names)
-        self.descs=[x for _,x in sorted(zip(names,descripts))]
-        layout2 = GridLayout(rows=len(self.descs),size_hint_y=None)
-        #layout2.bind(minimum_height=self.setter('height'))
-        for i in range(len(self.namelist)):
-            #lab = WrapLabel(text=self.namelist[i]+':'+self.discs[i])
-            #layout2.add_widget(lab)
-            gloss = GlossLabel()
-            gloss.nom=self.namelist[i]
-            gloss.desc=self.descs[i]
+        namelist = sorted(names)
+        descs=[x for _,x in sorted(zip(names,descripts))]
+        layout2 = GridLayout(rows=len(descs),size_hint_y=None)
+        for i in range(len(namelist)):
+            gloss = GlossDefLabel(nom=namelist[i],desc=descs[i])
             layout2.add_widget(gloss)
         self.add_widget(layout2)
         self.do_scroll_x=False
-        #self.add_widget(layout)
+        self.do_scroll_y=True
         layout2.height=sum([c.height for c in layout2.children])+20
+        
         
 class EventContainer(ButtonBehavior,GridLayout):
     name=ObjectProperty()
@@ -397,7 +377,9 @@ class EventContainer(ButtonBehavior,GridLayout):
         self.pop.namelist = self.namelist
         self.pop.row = self.row
         self.pop.open()
+
 def historyUpdate(obj,names,specialnames,sorttype='Time Descending'):
+    print('begin hist update')
     '''An important function that is responsible for populating and repopulating the history screen.'''
     global flag
     global main_flag
@@ -557,7 +539,7 @@ def historyUpdate(obj,names,specialnames,sorttype='Time Descending'):
             #reset the flag
             first = 0
 
-        waittime = 10
+        waittime = 10   
         i=0
         while i < waittime:
             if flag ==1:
@@ -573,25 +555,12 @@ def statusupdate(obj):
     global main_flag
     main_flag=0
     while True:
-        data = statusdetect()
+        data,stats = statusdetect()
         
         for i,elem in enumerate(data):
             setattr(obj,'det'+str(i+1)+'props',elem)
-#        j=0
-#        for child in obj.children:
-#            if stats[j] != 2:
-#                child.current_color=[1-stats[j],0,stats[j],1]
-#            else:
-#                child.current_color=[0,1,0,1]
-#            with child.canvas:
-#                    Color(rgba=child.current_color)
-#            i=0
-#            for label in child.children:
-#                label.text=order[i][j]
-#                i+=1
-#            j+=1
         
-        waittime = 300
+        waittime = 30
         i = 0
         while i < waittime:
             if main_flag == 1:
@@ -618,41 +587,52 @@ def plotupdate(obj):
         url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
         #grab the soup and parse for links + descripts
         try:
+            date = datetime.datetime.today()
+            sort_date = [str(date.year),str(date.month).zfill(2),str(date.day).zfill(2)]
+            datestring = sort_date[0]+sort_date[1]+sort_date[2]
+            url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
+            url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
             resp=requests.get(url)
             r = resp.text
+            if 'Not Found' in str(r):
+                date = datetime.datetime.today() - datetime.timedelta(days=1)
+                sort_date = [str(date.year),str(date.month).zfill(2),str(date.day).zfill(2)]
+                datestring = sort_date[0]+sort_date[1]+sort_date[2]
+                url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
+                url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
+                resp=requests.get(url)
+                r = resp.text
             soup=BeautifulSoup(r,"lxml")
             resp2 = requests.get(url2)
             r2 = resp2.text
             soup2 = BeautifulSoup(r2,"lxml")
         except:
-            print("URL Error: URL to the Range plots is broken : check online")
-        obj.clear_widgets()
-                
-        sources=[]
+            print("URL Error: URL to the Range plots is broken : check online")                
         descripts=[]
+        paths=[]
+        i=0
         for link in soup.find_all("a"):
             linkstr = str(link.get("href"))
             if 'png' in linkstr:
-                sources.append('https://www.gw-openscience.org'+linkstr)
+                filepath = 'Detector_Plot_'+str(i)+'.png'                
+                source='https://www.gw-openscience.org'+linkstr
+                os.system("curl -0 "+ source+ ' > ' + filepath)
                 descripts.append(str(link.get("title")))
+                paths.append(filepath)
+                i+=1
         for link in soup2.find_all("a"):
             linkstr=str(link)
             if 'png' and 'COINC' in linkstr:
+                filepath = 'Detector_Plot_'+str(i)+'.png'
                 descripts.append(str(link['title']))
-                sources.append('https://www.gw-openscience.org'+str(link.get("href")))
+                source= 'https://www.gw-openscience.org'+str(link.get("href"))
+                os.system("curl -0 "+ source+ ' > ' + filepath)
+                paths.append(filepath)
+                i+=1
                 break
-        
-        for i in range(0,len(sources)):
-            lay = GridLayout(rows=2,padding=15)
-            filepath = 'Detector_Plot_'+str(i)+'.png'
-            os.system("curl -0 "+ sources[i] + ' > ' + filepath)
-            img = AsyncImage(source = filepath,size_hint_y=0.8)
-            desc = WrapLabel(text=descripts[i],size_hint_y=0.2,color=(0,0,0,1))
-            
-            obj.add_widget(lay)
-            lay.add_widget(img)
-            lay.add_widget(desc)
-        
+
+        obj.imgsources = paths
+        obj.descs = descripts
         waittime=3600
         i=0
         while i < waittime:
@@ -662,10 +642,22 @@ def plotupdate(obj):
             i+=5
             time.sleep(5)
 
-class DetectLabel(ButtonBehavior,Label):
+class MainScreenv2(Screen):
     pass
 
+class AboutPop(Popup):
+    def stop(self):
+        global main_flag
+        main_flag = 1 
+        self.dismiss()
+        App.get_running_app().stop()
+        
 class StatusScreenv2(Screen):
+    det1props = ListProperty()
+    det2props = ListProperty()
+    det3props = ListProperty()
+    det4props = ListProperty()
+    det5props = ListProperty()    
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
         t = threading.Thread(target=statusupdate,args=(self,),daemon=True)
@@ -681,43 +673,22 @@ class StatusScreenv2(Screen):
                 anim.start(child)
                 
         App.get_running_app().root.transition=FadeTransition(duration=0.3)
-        def change(dt):
+        def change(presser):
             App.get_running_app().root.current='statinfo'
-        Clock.schedule_once(change,0.5)
-        
-#class StatusScreen(Screen):
-#    '''DETECTOR STATUS SCREEN'''
-#    def __init__(self,**kwargs):
-#        super().__init__(**kwargs)
-#        layout = GridLayout(cols=1,rows=2,spacing=30,padding=30, row_default_height=150)
-#        with layout.canvas.before:
-#            Color(.2,.2,.2,1)
-#            self.rect=Rectangle(size=(800,600),pos=layout.pos)
-#
-#        self.add_widget(layout)
-#
-#        detLay = BoxLayout(orientation='vertical',spacing=10)
-#
-#        for i in range(0,4):
-#            lay = DetGrid(cols=3,spacing=10,padding=10)
-#            for j in range(0,3):
-#                box = DetLabel(text='test'+str(j))
-#                lay.add_widget(box)
-#            with lay.canvas.before:
-#                lay.col = Color(1,0,1,0)
-#                lay.rect=Rectangle(pos=lay.pos)
-#            detLay.add_widget(lay)
-#            
-#        layout.add_widget(detLay)        
-#
-#        t = threading.Thread(target=statusupdate,args=(detLay,),daemon=True)
-#        t.start()
-#
-#        button3 = MainButton(text='Main Menu',name='main',size_hint_y=0.25)
-#        layout.add_widget(button3)
+            App.get_running_app().root.current_screen.detlist = presser.prop
+        Clock.schedule_once(lambda dt: change(presser),0.5)
 
+class PlotsScreen(Screen):
+    imgsources = ListProperty()
+    descs = ListProperty()
+    
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        t3 = threading.Thread(target=plotupdate,args=(self,),daemon=True)
+        t3.start()
+        
 class StatBio(Screen):
-    def change(obj):
+    def change(obj):    
         App.get_running_app().root.current = 'status'
         App.get_running_app().root.transition=NoTransition()
         for child in App.get_running_app().root.current_screen.children[0].children:
@@ -728,22 +699,7 @@ class StatBio(Screen):
                 anim=Animation(x=child.pos[0],y=child.pos[1]-240-child.height)
                 anim.start(child)
         App.get_running_app().root.transition=SlideTransition()
-    pass
 
-class PlotsScreen(Screen):
-    def __init__(self,**kwargs):
-        super().__init__(**kwargs)
-        layout=GridLayout(rows=2)
-    
-        carousel = Carousel(direction='right',size_hint_y=0.9)
-        self.add_widget(layout)
-        layout.add_widget(carousel)
-        
-        t3 = threading.Thread(target=plotupdate,args=(carousel,),daemon=True)
-        t3.start()
-        
-        button4 = MainButton(text='Main Menu',name='main',size_hint_y=0.1)
-        layout.add_widget(button4)
 
 class MyApp(App):
     def build_config(self,config):
@@ -768,17 +724,18 @@ class MyApp(App):
             print('Event Sync not required...')
         
         sm = ScreenManager()
-        sm.add_widget(MainScreen(name='main'))
+        sm.add_widget(MainScreenv2(name='main'))
         sm.add_widget(HistoryScreen(name='history'))
         sm.add_widget(StatusScreenv2(name='status'))
         sm.add_widget(PlotsScreen(name='plots'))
         sm.add_widget(StatBio(name='statinfo'))
         
-        print('Initialising application...')
+        print('Initialised application...')
         return sm
 
 #Spyder test functionality
 def reset():
+    print('i have been reset')
     import kivy.core.window as window
     from kivy.base import EventLoop
     if not EventLoop.event_listeners:

@@ -29,10 +29,13 @@ def statusdetect():
             i-=1
     statuses = []
     for row in detrows:
-        if row[2] == 'Timestamp error' or row[2] == 'Future addition':
+        if row[2] == 'Timestamp error':
             row[3] = 'N/A'
             statuses.append(1)
-        elif row[2] == 'Observing':
+        elif row[2] == 'Future addition':
+            row[3] = 'N/A'
+            statuses.append(3)
+        elif row[2] == 'Observing'or row[2] == 'Science':
             statuses.append(2)
         elif row[2] == 'Down':
             statuses.append(0)
@@ -40,10 +43,7 @@ def statusdetect():
             statuses.append(1)
     export=[]
     for i,row in enumerate(detrows):
-        if names[i] == 'Kagra':
-            #yellow
-            toput=[1,1,0,1]
-        elif statuses[i] == 0:
+        if statuses[i] == 0:
             #red 
             toput = [1,0,0,1]
         elif statuses[i] == 1:
@@ -52,7 +52,10 @@ def statusdetect():
         elif statuses[i] == 2:
              #green
              toput=[0,1,0,1]
+        elif statuses[i] == 3:
+            #yellow
+            toput=[1,1,0,1]
         temp=[row[0],row[2],row[3],toput]
         export.append(temp)
     export[0],export[2] = export[2],export[0]
-    return export
+    return export,statuses

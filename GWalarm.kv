@@ -1,8 +1,134 @@
 #:kivy 1.11.0
+#:import Factory kivy.factory.Factory
+
+<Image,AsyncImage>:
+    nocache:True
+    
+<Separator@Widget>:
+    rgba: 1,1,1,1
+    canvas:
+        Color:
+            rgba: self.rgba
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<HSeparator@Separator>:
+    size_hint_y: None
+    height: dp(2)
+
+<LabButton@ButtonBehavior+GridLayout>:
+    name:'default'
+    imgsource:'./IGR.jpg'
+    titletext:'n'
+    texty:'n'
+    rows:4
+    on_press:self.parent.parent.parent.manager.current=self.name
+    canvas.before:
+        Color:
+            rgba: 0,0,0,1
+        Line:
+            width:2
+            rectangle: self.x, self.y, self.width, self.height
+    Label:
+        padding:10,0
+        text:root.titletext
+        color:0,0,0,1
+        text_size:self.width,None
+        halign:'left'
+        font_size:22
+        size_hint_y:0.2
+    HSeparator:
+        rgba: 0,0,0,1
+    Label:
+        padding:10,0
+        text:root.texty
+        color:0,0,0,1
+        text_size:self.width,None
+        height:self.texture_size[1]
+        halign:'left'
+        font_size:18
+        size_hint_y:0.35
+    BoxLayout:
+        padding:2,0
+        size_hint_y:0.45
+        AsyncImage:
+            source:root.imgsource
+            allow_stretch:True
+            keep_ratio:False
+
+<AboutPop>:
+    title:'About the GWAlarm project'
+    size_hint:0.4,0.4
+    quit:None
+    GridLayout:
+        rows:2
+        Label:
+            text:'GWalarm info here'
+        Button:
+            text:'quit app'
+            on_press:root.stop()
+
+<MainScreenv2@Screen>:
+    GridLayout:
+        rows:2
+        GridLayout:
+            canvas.before:
+                Color:
+                    rgba: 0.2,0.25,0.4,1
+                Rectangle:
+                    pos:self.pos
+                    size:self.size
+            rows:2
+            cols:3
+            size_hint_y:0.4
+            Image:
+                source:'./IGR.jpg'
+                size_hint_x:0.15
+            Label:
+                size_hint_x:0.7
+            Button:
+                text:'About'
+                on_press:Factory.AboutPop().open()
+                size_hint_x:0.15
+            Label:
+                size_hint_x:0.15
+            Label:
+                text:'Gravitational Wave Alarm'
+                font_size:32
+                size_hint_x:0.7
+            Label:
+                size_hint_x:0.15
+        GridLayout:
+            canvas.before:
+                Color:
+                    rgba: .9,.9,.9,1
+                Rectangle:
+                    pos:self.pos
+                    size:self.size
+            cols:3
+            size_hint_y:0.6
+            padding:20,0
+            LabButton:
+                name:'plots'
+                titletext:'Plots'
+                texty:'View detector noise curves, maximum event detection ranges and more'
+                imgsource:'./event_data/KAGRA.jpg'
+            LabButton:
+                name:'history'
+                titletext:'Event History'
+                texty:'Browse detailed profiles on all events detected so far in Observing Run 3'
+                imgsource:'./event_data/LIGO Hanford.jpg'
+            LabButton:
+                name:'status'
+                titletext:'Detector Status'
+                texty:"Monitor the activities of the world's largest GW observatories"
+                imgsource:'./event_data/LIGO Livingston.jpg'
 
 <WrapLabel@Label>:
     text_size: root.width, None
     size:self.texture_size
+    height:self.texture_size[1]
     halign: 'center'
     valign: 'middle'
     font_size: 14
@@ -19,10 +145,10 @@
             pos:self.pos    
     canvas:
         Color:
-            rgba: 0.2,0.2,0.2,1
+            rgba: 0.6,0.6,0.6,1
         Line:
-            width: 1
-            rectangle: self.x, self.y, self.width, 2
+            width: 2
+            points: [self.x, self.y, self.x+self.width,self.y]
     canvas.after:
         Rectangle:
             pos:self.pos[0]+self.width*0.87,self.pos[1]+self.height*0.25
@@ -35,13 +161,14 @@
     font_size: 14
     
 <DetectLabel@ButtonBehavior+Label>:
-    valign:'top'
-    iam: 'Button'
+    prop:['GEO 600','test','test',(1,1,1,1)]
+    halign:'center'
     color:(0,0,0,1)
-    bg_col:(1,1,1,1)
+    bg_col:self.prop[3]
+    font_size:14
     canvas.before:
         Color:
-            rgba: self.bg_col
+            rgba: self.bg_col or [1,1,1,1]
         Rectangle:
             pos:self.pos
             size:self.size
@@ -64,128 +191,210 @@
         BoxLayout:
             size_hint_y:0.1
             BoxLayout:
+                canvas:
+                    Color:
+                        rgba: 0,0,0,1
+                    Line:
+                        width:2
+                        rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
-                    bg_col:root.det1props[3]
-                    text:root.det1props[0]
+                    prop:root.det1props
+                    text:self.prop[0]
                     on_press:root.retract(self)
                     valign:'top'
                 DetectLabel:
-                    bg_col:root.det1props[3]
-                    text:root.det1props[1]
+                    prop:root.det1props
+                    text:self.prop[1]
                     on_press:root.retract(self)
                     valign:'top'
+                    text_size:self.width,None
                     
                 DetectLabel:
-                    bg_col:root.det1props[3]
-                    text:root.det1props[2]
+                    prop:root.det1props
+                    text:self.prop[2]
                     on_press:root.retract(self)
                     valign:'top'
-            BoxLayout    
+            BoxLayout:
+                canvas:
+                    Color:
+                        rgba: 0,0,0,1
+                    Line:
+                        width:2
+                        rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
-                    bg_col:root.det2props[3]
-                    text:root.det2props[0]
+                    prop:root.det2props
+                    text:self.prop[0]
                     on_press:root.retract(self)
                     valign:'top'
                 DetectLabel:
-                    bg_col:root.det2props[3]
-                    text:root.det2props[1]
+                    prop:root.det2props
+                    text:self.prop[1]
                     on_press:root.retract(self)
                     valign:'top'
+                    text_size:self.width,None
                 DetectLabel:
-                    bg_col:root.det2props[3]
-                    text:root.det2props[2]
+                    prop:root.det2props
+                    text:self.prop[2]
                     on_press:root.retract(self)
                     valign:'top'
         GridLayout:
-            cols:2
-            GridLayout:
-                rows:3
-                Label:
-                    text:'Detector Network'
-                WrapLabel:
-                    text:'Detector spiel here: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pretium interdum orci quis condimentum. Nunc cursus lorem dolor, at auctor velit aliquet et. Suspendisse potenti. Donec ac hendrerit ex. Maecenas et lectus dapibus, lacinia quam eget, consectetur elit. Donec non imperdiet quam, in imperdiet est. Suspendisse laoreet elementum libero a semper. Duis in molestie tortor, id interdum urna. Sed ultrices nisl at elit facilisis, ac scelerisque mi lacinia. Pellentesque eu orci at quam porta bibendum at et risus. Nam sed risus bibendum, convallis augue ut, suscipit eros. Ut viverra nec odio sit amet pulvinar. Aenean lorem purus, mollis in elementum ac, porttitor eget diam. '
+            cols:3
+            BoxLayout:
+                size_hint_x:0.13
                 Button:
                     on_press:root.manager.current='main'
-                    text:'Main menu'
+                    text:'Main Menu'
+                    size_hint:0.2,0.15
+            GridLayout:
+                rows:3
+                size_hint_x:0.84
+                padding:(0,30)
+                Label:
+                    text:'Welcome to the Detector Portal!'
+                    font_size:30
+                    color:0,0,0,1
                     size_hint_y:0.1
-            AsyncImage:
-                source:"./Detector_Plot_3.png"
-                
+                Label:
+                    text:'Tap any of the detectors on-screen to learn more.'
+                    fontsize:20
+                    color:0,0,0,1
+                    size_hint_y:0.1
+                AsyncImage:
+                    source:"./Detector_Plot_3.png"
+                    size_hint_y:0.8
+                    allow_stretch:True
+            BoxLayout:
+                size_hint_x:0.13
         BoxLayout:
             size_hint_y:0.1
             BoxLayout:
+                canvas:
+                    Color:
+                        rgba: 0,0,0,1
+                    Line:
+                        width:2
+                        rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
-                    bg_col:root.det3props[3]
-                    text:root.det3props[0]
+                    prop:root.det3props
+                    text:self.prop[0]
                     on_press:root.retract(self)
                     valign:'bottom'
                 DetectLabel:
-                    bg_col:root.det3props[3]
-                    text:root.det3props[1]
+                    prop:root.det3props
+                    text:self.prop[1]
                     on_press:root.retract(self)
                     valign:'bottom'
+                    text_size:self.width,None
                 DetectLabel:
-                    bg_col:root.det3props[3]
-                    text:root.det3props[2]
+                    prop:root.det3props
+                    text:self.prop[2]
                     on_press:root.retract(self)
                     valign:'bottom'
             BoxLayout:
+                canvas:
+                    Color:
+                        rgba: 0,0,0,1
+                    Line:
+                        width:2
+                        rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
-                    bg_col:root.det4props[3]
-                    text:root.det4props[0]
+                    prop:root.det4props
+                    text:self.prop[0]
                     on_press:root.retract(self)
                 DetectLabel:
-                    bg_col:root.det4props[3]
-                    text:root.det4props[1]
+                    prop:root.det4props
+                    text:self.prop[1]
                     on_press:root.retract(self)
                     valign:'bottom'
+                    text_size:self.width,None
                 DetectLabel:
-                    bg_col:root.det4props[3]
-                    text:root.det4props[2]
+                    prop:root.det4props
+                    text:self.prop[2]
                     on_press:root.retract(self)
                     
             BoxLayout:
+                canvas:
+                    Color:
+                        rgba: 0,0,0,1
+                    Line:
+                        width:2
+                        rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
-                    bg_col:root.det5props[3]
-                    text:root.det5props[0]
+                    prop:root.det5props
+                    text:self.prop[0]
                     on_press:root.retract(self)
                     valign:'bottom'
                 DetectLabel:
-                    bg_col:root.det5props[3]
-                    text:root.det5props[1]
+                    prop:root.det5props
+                    text:self.prop[1]
                     on_press:root.retract(self)
                     valign:'bottom'
+                    text_size:self.width,None
                 DetectLabel:
-                    bg_col:root.det5props[3]
-                    text:root.det5props[2]
+                    prop:root.det5props
+                    text:self.prop[2]
                     on_press:root.retract(self)
                     valign:'bottom'
 
+<DetBioLabel@Label>:
+    text_size: self.width,None
+    height:self.texture_size[1]
+    size_hint_y:None
+    font_size:16
+    line_height:0.9
+    markup:True
+    color:0,0,0,1
 <StatBio@Screen>:
+    detlist:['test','test','test',[1,1,1,1]]
+    canvas.before:
+        Color:
+            rgba:.2,.2,.4,1
+        Rectangle:
+            size:self.size
+            pos:self.pos
+    canvas:
+        Color:
+            rgba:238/255,238/255,235/255,1
+        Rectangle:
+            size:self.size[0]-40,self.size[1]-40
+            pos:self.pos[0]+20,self.pos[1]+20
     GridLayout:
+        padding:30
         cols:2
         BoxLayout:
+            size_hint_x:0.6
+            spacing:0,20
+            orientation:'vertical'
             Label:
-                text:'Title'
+                text:root.detlist[0]
+                size_hint_y: 0.15
+                font_size:32
+                text_size: self.width, None
+                halign: 'left'
+                color:0,0,0,1
+
             Label:
-                text:'Status'
-            Label:
-                text:'Bio: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pretium interdum orci quis condimentum. Nunc cursus lorem dolor, at auctor velit aliquet et. Suspendisse potenti. Donec ac hendrerit ex. Maecenas et lectus dapibus, lacinia quam eget, consectetur elit. Donec non imperdiet quam, in imperdiet est. Suspendisse laoreet elementum libero a semper. Duis in molestie tortor, id interdum urna. Sed ultrices nisl at elit facilisis, ac scelerisque mi lacinia. Pellentesque eu orci at quam porta bibendum at et risus. Nam sed risus bibendum, convallis augue ut, suscipit eros. Ut viverra nec odio sit amet pulvinar. Aenean lorem purus, mollis in elementum ac, porttitor eget diam. '
+                text:root.detlist[1]
+                size_hint_y:0.05
+                font_size:24
+                text_size: self.width, None
+                halign: 'left'
+                valign:'top'
+                color:0.4,0.4,0.4,1
+                                
+            DetBioLabel:
+                text:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pretium interdum orci quis condimentum. Nunc cursus lorem dolor, at auctor velit aliquet et. Suspendisse potenti. Donec ac hendrerit ex. Maecenas et lectus dapibus, lacinia quam eget, consectetur elit. Donec non imperdiet quam, in imperdiet est. Suspendisse laoreet elementum libero a semper. Duis in molestie tortor, id interdum urna. Sed ultrices nisl at elit facilisis, ac scelerisque mi lacinia. Pellentesque eu orci at quam porta bibendum at et risus. Nam sed risus bibendum, convallis augue ut, suscipit.'
+                size_hint_y:0.7
             Button:
                 text:'Return to Detector Summary'
                 on_press:root.change()
                 size_hint_y:0.1
+                size_hint_x:0.5
         AsyncImage:
-            source:None
+            size_hint_x:0.4
+            source:root.detlist[0]+'.jpg'
 
-<GlossDefLabel@Label>:
-    size_hint_y:None
-    text_size: root.width, None
-    height:self.texture_size[1]
-    halign: 'justify'
-    font_size:12
-    line_height:0.9
-    markup:True
+
     
 <HistoryScreen@Screen>:
     canvas:
@@ -216,53 +425,55 @@
     rowdict:dict(zip(self.namelist,self.row))
     
     background_color: [.2,.2,.4,1]
-    size_hint:(0.97,0.97)
+    
+    size_hint:(0.98,0.97)
     
     Carousel:
+        id:caro
+        canvas.before:
+            Color:
+                rgba:(1,1,1,1)
+            Rectangle:
+                pos:self.pos
+                size:self.size
         GridLayout:
             cols:3
+            spacing:(3,0)
             GridLayout:
                 size_hint:(0.2,1)
-                rows:3 
-                padding: 10,2
+                rows:4 
+                padding: 0,2
+                canvas.before:
+                    Color:
+                        rgba: .2,.2,.2,1
+                    Rectangle:
+                        pos:self.pos
+                        size:self.size
                 canvas.after:
                     Color:
                         rgba: 0.6,0.6,0.6,1 
                     Line:
-                        width:1
+                        width:2
                         rectangle: self.x, self.y, self.width, self.height
                 Label:
-                    text:'Glossary'
+                    text:'Superevent Information'
                     size_hint_y:0.1
-                Glossary:
+                Button:
                     size_hint:(1,0.8)
+                    padding:10,2
+                    text:'Open Glossary'
+                    on_press:root.gloss_open()
                 Button:
                     text:'Exit Info Scrn'
                     size_hint_y:0.1
                     on_press:root.dismiss()
             GridLayout:
-                rows:3
-                size_hint:(0.3,1)
-                BoxLayout:
-                    size_hint_y:0.15
-                    canvas.after:
-                        Color:
-                            rgba:1,0,0,1
-                        Line:
-                            width:2
-                            rectangle: self.x+1, self.y+1, self.width+1, self.height+1
-                        
-                    orientation:'vertical'
-                    InfoLabel:
-                        text:root.part1info[0] + ':' + root.rowdict[root.part1info[0]]    
-                        bg_col:(188/255,189/255,34/255,1)  
-                    InfoLabel:
-                        text:root.part1info[1] + ':' + root.rowdict[root.part1info[1]]
-                        bg_col:(23/255,190/255,207/255,1)
-                        
+                rows:2
+                size_hint:(0.37,1)
+
                 GridLayout:
                     rows: len(root.part2info)
-                    size_hint_y:0.45
+                    size_hint_y:0.6
                     canvas.before:
                         Color:
                             rgba: (0.2,0.2,0.2,1)
@@ -286,10 +497,10 @@
                     rows: len(root.part3info)
                     canvas.after:
                         Color:
-                            rgba:0,0,1,1
+                            rgba:1,0,1,1
                         Line:
                             width:2
-                            rectangle: self.x, self.y, self.width, self.height
+                            points: [self.x+self.width+1,self.y+self.height,self.x,self.y+self.height,self.x,self.y,self.x+self.width+1,self.y]
                     InfoLabel:
                         text:root.part3info[0] + ':' + root.rowdict[root.part3info[0]]
                         bg_col:(44/255,160/255,44/255,1)
@@ -307,50 +518,121 @@
                         bg_col:(148/255,103/255,189/255,1)
     
             GridLayout:
-                spacing:10
                 rows:2
-                size_hint:(0.4,1)
-                canvas.before:
-                    Color:
-                        rgba: 1,1,1,1
-                    Rectangle:
-                        size:self.size
-                        pos:self.pos
-
+                size_hint:(0.33,1)
                 BoxLayout:
+                    orientation:'horizontal'
                     size_hint:(1,0.3)
-                    canvas.after:
+                    canvas.before:
                         Color:
-                            rgba: 1,0,0,1
-                        Line:
-                            width:2
-                            rectangle: self.x+1, self.y+1, self.width+1, self.height+1
-                            
-                    AsyncImage:
-                        source:root.rowdict['GraceID']+'_bar.png'
+                            rgba:.2,.2,.2,1
+                        Rectangle:
+                            pos:self.pos
+                            size:self.size
+                    GridLayout:
+                        canvas.before:
+                            Color:
+                                rgba:1,1,1,1
+                            Line:
+                                width:2
+                                rectangle:self.x,self.y,self.width,self.height
+                        rows:2
+                        Label:
+                            text:root.part1info[0][3:]+' left?'
+                            font_size:14
+                            text_size:self.width,None
+                            height:self.texture_size[1]
+                            halign:'center'
+                        Label:
+                            text:root.rowdict[root.part1info[0]]
+                            font_size:20
+                    GridLayout:                                
+                        canvas.before:
+                            Color:
+                                rgba:1,1,1,1
+                            Line:
+                                width:2
+                                rectangle:self.x,self.y,self.width,self.height
+                        rows:2
+                        Label:
+                            text:root.part1info[1][3:]+' progenitor?'
+                            font_size:14
+                            halign:'center'
+                        Label:
+                            text:root.rowdict[root.part1info[1]]
+                            font_size:20
 
                 BoxLayout:
                     size_hint:(1,0.7)
                     canvas.after:
                         Color:
-                            rgba: 0,0,1,1
+                            rgba: 1,0,1,1
                         Line:
-                            width:2 
-                            rectangle: self.x+1, self.y+1, self.width+1, self.height+1
+                            width:2
+                            points:[self.x-2,self.y+self.height*0.58,self.x-2,self.y+self.height,self.x+self.width,self.y+self.height,self.x+self.width,self.y,self.x-2,self.y]
+
                     AsyncImage:
                         source:root.rowdict['GraceID']+'_pie.png'
-        AsyncImage:
-            source:root.rowdict['skymap']
-            
-        
-        
+        BoxLayout:
+            Button:
+                text:'Exit \n Info Scrn'
+                size_hint:(0.1,0.3)
+                on_press:caro.index=0;root.dismiss()
+                text_size:root.width,None
+                halign:'center'
+                valign:'top'
+            AsyncImage:
+                source:root.rowdict['skymap'] 
+                size_hint_x:0.8
+            Label:
+                size_hint_x:0.1      
+
+<PlotContainer@GridLayout>:
+    imsource:'test'
+    desc:'test'
+    rows:2
+    padding:15
+    AsyncImage:
+        source:root.imsource
+        size_hint_y:0.8
+    WrapLabel:
+        text:root.desc
+        size_hint_y:0.2
+        color:0,0,0,1
+
 <PlotsScreen@Screen>:
+    imgsources:['test','test','test','test']
+    descs:['test','test','test','test']
+    
     canvas.before:
         Color:
             rgba: 1,1,1,1
         Rectangle:
             size:self.size
-            pos:self.pos    
+            pos:self.pos 
+             
+    GridLayout:
+        rows:2
+        Carousel:
+            direction:'right'
+            size_hint_y:0.9
+            PlotContainer:
+                imsource:root.imgsources[0]
+                desc:root.descs[0]
+            PlotContainer:
+                imsource:root.imgsources[1]
+                desc:root.descs[1]
+            PlotContainer:
+                imsource:root.imgsources[2]
+                desc:root.descs[2]
+            PlotContainer:
+                imsource:root.imgsources[3]
+                desc:root.descs[3]
+            
+        Button:
+            on_press:root.manager.current='main'
+            text:'main'
+            size_hint_y:0.1
     
 <DetGrid@GridLayout>:
     current_color: (0,0,0,0)
@@ -362,17 +644,21 @@
             size:self.size
             pos:self.pos        
 
-<GlossLabel@GridLayout>:
-    rows:2
-    orientation:'vertical'
+<GlossDefLabel@Label>:
     nom:'tobereplaced'
     desc:'tobereplaced'
     padding:(3,10)
     spacing:(0,3)
 
-    GlossDefLabel:
-        text:'[b][u]'+root.nom+'[/b][/u] \n' + root.desc
-        valign:'top'
+    text:'[b][u]'+self.nom+'[/b][/u] \n' + self.desc
+    valign:'top'
+    size_hint_y:None
+    text_size: root.width, None
+    halign: 'justify'
+    font_size:12
+    line_height:1
+    markup:True
+    
 <MainButton@Button>:
 	on_press:self.nav()
 	

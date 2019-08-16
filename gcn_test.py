@@ -163,12 +163,12 @@ def process_gcn(payload, root):
         elif key in lookoutfor:
             order.append(key)
             vals.append(float(value))
-            det_event[key]=value
+            det_event[key]=str(format("{0:.3f}".format(float(value)*100)))+'%'
             descriptions[key]=descs[i]
         elif key in lookoutfor2:
             order2.append(key)
             vals2.append(float(value))
-            det_event[key]=value
+            det_event[key]=str(format("{0:.3f}".format(float(value)*100)))+'%'
             descriptions[key]=descs[i]
         else:
             try:
@@ -215,29 +215,33 @@ def process_gcn(payload, root):
         plt.text(0.335,0.44,order[specindex],fontsize=26,transform=ax1.transAxes)
     else:
         plt.text(0.42,0.42,order[specindex],fontsize=28,transform=ax1.transAxes)
+
+    plt.text(0,0.05,'Event Type',fontsize=13,transform=ax1.transAxes)
+    plt.text(0,0.01,'Probability Distribution',fontsize=13,transform=ax1.transAxes)
+
     plt.tight_layout()
     plt.savefig(params['GraceID']+'_pie.png')
     
-    pos=[0,1]
-    tickpos=np.array([0,0.2,0.4,0.6,0.8,1])*100
-    data = np.array(vals2)*100
-    
-    fig2,ax2 = plt.subplots(figsize=(4,1.5))
-    # Hide the right and top spines
-    ax2.spines['right'].set_visible(False)
-    ax2.spines['top'].set_visible(False)
-    
-    # Only show ticks on the left and bottom spines
-    ax2.yaxis.set_ticks_position('left')
-    ax2.xaxis.set_ticks_position('bottom')
-    ax2.barh(pos,data,height=0.7,color=['C8','C9'])
-    plt.xlabel('Probability (%)')
-    plt.xticks(tickpos)
-    plt.yticks(pos,order2)
-    plt.tight_layout()
-    plt.savefig(params['GraceID']+'_bar.png')
+#    pos=[0,1]
+#    tickpos=np.array([0,0.2,0.4,0.6,0.8,1])*100
+#    data = np.array(vals2)*100
+#    
+#    fig2,ax2 = plt.subplots(figsize=(4,1.5))
+#    # Hide the right and top spines
+#    ax2.spines['right'].set_visible(False)
+#    ax2.spines['top'].set_visible(False)
+#    
+#    # Only show ticks on the left and bottom spines
+#    ax2.yaxis.set_ticks_position('left')
+#    ax2.xaxis.set_ticks_position('bottom')
+#    ax2.barh(pos,data,height=0.7,color=['C8','C9'])
+#    plt.xlabel('Probability (%)')
+#    plt.xticks(tickpos)
+#    plt.yticks(pos,order2)
+#    plt.tight_layout()
+#    plt.savefig(params['GraceID']+'_bar.png')
     plt.close(fig1)
-    plt.close(fig2)
+#    plt.close(fig2)
     
     det_event.append()
     table.flush()
