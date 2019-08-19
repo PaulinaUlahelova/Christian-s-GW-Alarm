@@ -374,7 +374,7 @@
                 color:0,0,0,1
 
             Label:
-                text:root.detlist[1]
+                text:root.detlist[1]+' ' + root.detlist[2]
                 size_hint_y:0.05
                 font_size:24
                 text_size: self.width, None
@@ -674,9 +674,10 @@
     text3:'tobereplaced'
     text4:'tobereplaced'
     on_press: self.details()
+    bgcol: 0.9,0.9,0.9,1
     canvas.before:
         Color:
-            rgba: 0.9,0.9,0.9,1
+            rgba: self.bgcol
         Rectangle:
             pos:self.pos
             size:self.size

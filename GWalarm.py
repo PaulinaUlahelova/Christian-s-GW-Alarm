@@ -33,8 +33,6 @@ from kivy.uix.carousel import Carousel
 from kivy.uix.popup import Popup
 from kivy.uix.behaviors  import ButtonBehavior, ToggleButtonBehavior
 from kivy.animation import Animation
-
-#import RPi.GPIO as GPIO
 from kivy.lang.builder import Builder
 
 from detector_monitorv2 import statusdetect
@@ -48,6 +46,20 @@ import datetime
 import os
 import re
 import numpy as np
+
+#import RPi.GPIO as GPIO
+#led1 = [22,24,23]
+#led2 = [10,25,9]
+#led3 = [8,0,11]
+#led4 = [7,12,1]
+#led5 = [6,13,5]
+#led6 = [16,20,26]
+#leds = [led1,led2,led3,led4,led5,led6]
+#pins = [22,24,23,10,25,9,8,0,11,7,12,1,6,13,5,16,20,26]
+#buzzpin = 27
+#GPIO.setmode(GPIO.BCM)
+#GPIO.setup(pins,GPIO.OUT)
+#GPIO.output(pins,GPIO.HIGH)
 
 class Event(IsDescription):
     AlertType=StringCol(30)
@@ -105,6 +117,7 @@ class MainScreen(Screen):
         def stop(obj):
             global main_flag
             main_flag=1
+            #GPIO.cleanup()
             App.get_running_app().stop()
 
         self.add_widget(layout)
@@ -184,6 +197,8 @@ class HisColLabel(ToggleButtonBehavior,Label):
     newsort=ObjectProperty()
     names=ObjectProperty()
     specialnames=ObjectProperty()
+    lookout = ObjectProperty()
+    backcolors=ObjectProperty()
     primed=NumericProperty()
     
     def on_press(self):
@@ -205,7 +220,8 @@ class HisColLabel(ToggleButtonBehavior,Label):
             self.newsort = self.sorttype+' Ascending'
             self.imgsource='./descending.png'
         t2 = threading.Thread(target=historyUpdate,args=(App.get_running_app().root.children[0].children[0].children[1].children[0],
-                                                         self.names,self.specialnames,self.newsort),daemon=True)
+                                                         self.names,self.specialnames,self.lookout,
+                                                         self.backcolors,self.newsort),daemon=True)
         t2.start()
 
 class HistoryScreen(Screen):    
@@ -251,10 +267,16 @@ class HistoryScreen(Screen):
         h5file.close()
         nameLay = GridLayout(cols=len(names),size_hint_y=0.1)
         specialnames=['GraceID','Distance','Instruments','FAR','UpdateTime']
+        lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
+        backcolors = [[202/255,214/255,235/255,0.8],[179/255,242/255,183/255,0.8],
+                      [238/255,242/255,179/255,0.8],[231/255,179/255,242/255,0.8],
+                      [242/255,179/255,179/255,0.8]]
         for name in specialnames:
             lab = HisColLabel(text=name,color=(0,0,0,1),sorttype=name)
             lab.names=names
             lab.specialnames=specialnames
+            lab.lookout = lookoutfor
+            lab.backcolors=backcolors
             nameLay.add_widget(lab)
         layout.add_widget(nameLay)
         hisScroll = ScrollView(do_scroll_x=False,do_scroll_y=True,size_hint=(1,0.7))
@@ -264,7 +286,7 @@ class HistoryScreen(Screen):
         hisGrid.height=num_events*50
         hisScroll.add_widget(hisGrid)
         
-        t2 = threading.Thread(target=historyUpdate,args=(hisGrid,names,specialnames),daemon=True)
+        t2 = threading.Thread(target=historyUpdate,args=(hisGrid,names,specialnames,lookoutfor,backcolors),daemon=True)
         t2.start()
         '''backup stuff'''
         
@@ -276,6 +298,7 @@ class HistoryScreen(Screen):
             App.get_running_app().root_window.close()
             print('shutdown')
             #time.sleep(5)
+            #GPIO.cleanup()
             sync_database()
             #Wait for it to finish....
             print('done - restart away')
@@ -378,7 +401,7 @@ class EventContainer(ButtonBehavior,GridLayout):
         self.pop.row = self.row
         self.pop.open()
 
-def historyUpdate(obj,names,specialnames,sorttype='Time Descending'):
+def historyUpdate(obj,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending'):
     print('begin hist update')
     '''An important function that is responsible for populating and repopulating the history screen.'''
     global flag
@@ -514,7 +537,13 @@ def historyUpdate(obj,names,specialnames,sorttype='Time Descending'):
                         setattr(grid,'text'+str(i),string.decode()) 
                     else:    
                     #FIXME: ADD NEAT TEXT BY PARSING INPUT TEXT
-                        setattr(grid,'text'+str(i),string.decode())       
+                        setattr(grid,'text'+str(i),string.decode())  
+                stats = []
+                for name in lookoutfor:
+                    stats.append(float(row[name].decode().strip('%')))
+                winner = lookoutfor[np.argmax(stats)]
+                grid.bgcol = backcolors[np.argmax(stats)]
+                #print(grid.bgcol)
             for i,child in enumerate(children):
                 if widgetids[i] not in presentids:
                     obj.remove_widget(child)
@@ -559,7 +588,28 @@ def statusupdate(obj):
         
         for i,elem in enumerate(data):
             setattr(obj,'det'+str(i+1)+'props',elem)
-        
+#        for i,stat in enumerate(stats):
+#            _led = leds[i]
+#            if stat == 0:
+#                #red
+#                GPIO.output(_led[0],GPIO.LOW)
+#                GPIO.output(_led[1],GPIO.HIGH)
+#                GPIO.output(_led[2],GPIO.HIGH)
+#            if stat == 1:
+#                #blue
+#                GPIO.output(_led[0],GPIO.HIGH)
+#                GPIO.output(_led[1],GPIO.HIGH)
+#                GPIO.output(_led[2],GPIO.LOW)
+#            if stat == 2:
+#                #green
+#                GPIO.output(_led[0],GPIO.HIGH)
+#                GPIO.output(_led[1],GPIO.LOW)
+#                GPIO.output(_led[2],GPIO.HIGH)
+#            if stat == 3:
+#                #yellow
+#                GPIO.output(_led[0],GPIO.LOW)
+#                GPIO.output(_led[1],GPIO.LOW)
+#                GPIO.output(_led[2],GPIO.HIGH)
         waittime = 30
         i = 0
         while i < waittime:
