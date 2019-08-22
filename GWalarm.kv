@@ -108,7 +108,7 @@
                     size:self.size
             cols:3
             size_hint_y:0.6
-            padding:20,0
+            padding:20,20
             LabButton:
                 name:'plots'
                 titletext:'Plots'
@@ -133,8 +133,12 @@
     valign: 'middle'
     font_size: 14
     
-<HisColLabel@Label>:
-    imgsource:'./neutral.png'
+<HisColLabel>:
+    names:
+    specialnames:
+    lookout:
+    backcolors:
+    imgsource:'./event_data/neutral.png'
     sorttype:
     newsort:
     canvas.before:
@@ -159,6 +163,7 @@
     halign: 'center'
     valign: 'middle'
     font_size: 14
+
     
 <DetectLabel@ButtonBehavior+Label>:
     prop:['GEO 600','test','test',(1,1,1,1)]
@@ -179,6 +184,7 @@
     det3props: ['test1','test2','test3',[1,0,1,1]]
     det4props: ['test1','test2','test3',[1,0,1,1]]
     det5props: ['test1','test2','test3',[1,0,1,1]]
+    bios:['','','','','']
 
     GridLayout:
         canvas.before:
@@ -187,7 +193,7 @@
             Rectangle:
                 size:self.size
                 pos:self.pos
-        rows:3
+        rows:4
         BoxLayout:
             size_hint_y:0.1
             BoxLayout:
@@ -200,11 +206,13 @@
                 DetectLabel:
                     prop:root.det1props
                     text:self.prop[0]
+                    bio:root.bios[0]
                     on_press:root.retract(self)
                     valign:'top'
                 DetectLabel:
                     prop:root.det1props
                     text:self.prop[1]
+                    bio:root.bios[0]
                     on_press:root.retract(self)
                     valign:'top'
                     text_size:self.width,None
@@ -212,6 +220,7 @@
                 DetectLabel:
                     prop:root.det1props
                     text:self.prop[2]
+                    bio:root.bios[0]
                     on_press:root.retract(self)
                     valign:'top'
             BoxLayout:
@@ -224,19 +233,45 @@
                 DetectLabel:
                     prop:root.det2props
                     text:self.prop[0]
+                    bio:root.bios[1]
                     on_press:root.retract(self)
                     valign:'top'
                 DetectLabel:
                     prop:root.det2props
                     text:self.prop[1]
+                    bio:root.bios[1]
                     on_press:root.retract(self)
                     valign:'top'
                     text_size:self.width,None
                 DetectLabel:
                     prop:root.det2props
                     text:self.prop[2]
+                    bio:root.bios[1]
                     on_press:root.retract(self)
                     valign:'top'
+        GridLayout:
+            size_hint_y:0.1
+            cols:2
+            BoxLayout:
+                size_hint_x:0.5
+            BoxLayout:
+                size_hint_x:0.5
+                orientation:'horizontal'
+                Label:
+                    text: 'Detector name'
+                    color:0,0,0,1
+                Label:
+                    text: 'Current status'
+                    color:0,0,0,1
+                Label:
+                    text: 'Duration \n (hours:minutes)'
+                    #size_hint_y:None
+                    text_size:self.size
+                    #height:self.texture_size[1]
+                    color:0,0,0,1
+                    #valign:'bottom'
+                    
+            
         GridLayout:
             cols:3
             BoxLayout:
@@ -277,17 +312,20 @@
                 DetectLabel:
                     prop:root.det3props
                     text:self.prop[0]
+                    bio:root.bios[2]
                     on_press:root.retract(self)
                     valign:'bottom'
                 DetectLabel:
                     prop:root.det3props
                     text:self.prop[1]
+                    bio:root.bios[2]
                     on_press:root.retract(self)
                     valign:'bottom'
                     text_size:self.width,None
                 DetectLabel:
                     prop:root.det3props
                     text:self.prop[2]
+                    bio:root.bios[2]
                     on_press:root.retract(self)
                     valign:'bottom'
             BoxLayout:
@@ -300,16 +338,19 @@
                 DetectLabel:
                     prop:root.det4props
                     text:self.prop[0]
+                    bio:root.bios[3]
                     on_press:root.retract(self)
                 DetectLabel:
                     prop:root.det4props
                     text:self.prop[1]
+                    bio:root.bios[3]
                     on_press:root.retract(self)
                     valign:'bottom'
                     text_size:self.width,None
                 DetectLabel:
                     prop:root.det4props
                     text:self.prop[2]
+                    bio:root.bios[3]
                     on_press:root.retract(self)
                     
             BoxLayout:
@@ -322,17 +363,20 @@
                 DetectLabel:
                     prop:root.det5props
                     text:self.prop[0]
+                    bio:root.bios[4]
                     on_press:root.retract(self)
                     valign:'bottom'
                 DetectLabel:
                     prop:root.det5props
                     text:self.prop[1]
+                    bio:root.bios[4]
                     on_press:root.retract(self)
                     valign:'bottom'
                     text_size:self.width,None
                 DetectLabel:
                     prop:root.det5props
                     text:self.prop[2]
+                    bio:root.bios[4]
                     on_press:root.retract(self)
                     valign:'bottom'
 
@@ -341,11 +385,12 @@
     height:self.texture_size[1]
     size_hint_y:None
     font_size:16
-    line_height:0.9
+    line_height:1.2
     markup:True
     color:0,0,0,1
 <StatBio@Screen>:
     detlist:['test','test','test',[1,1,1,1]]
+    bio: 'torep'
     canvas.before:
         Color:
             rgba:.2,.2,.4,1
@@ -383,7 +428,7 @@
                 color:0.4,0.4,0.4,1
                                 
             DetBioLabel:
-                text:'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis pretium interdum orci quis condimentum. Nunc cursus lorem dolor, at auctor velit aliquet et. Suspendisse potenti. Donec ac hendrerit ex. Maecenas et lectus dapibus, lacinia quam eget, consectetur elit. Donec non imperdiet quam, in imperdiet est. Suspendisse laoreet elementum libero a semper. Duis in molestie tortor, id interdum urna. Sed ultrices nisl at elit facilisis, ac scelerisque mi lacinia. Pellentesque eu orci at quam porta bibendum at et risus. Nam sed risus bibendum, convallis augue ut, suscipit.'
+                text: root.bio
                 size_hint_y:0.7
             Button:
                 text:'Return to Detector Summary'
@@ -404,6 +449,146 @@
             size:self.size
             pos:self.pos    
 
+<RV@RecycleView>:
+    id:rv
+    viewclass:'EventContainer'
+    
+    RecycleBoxLayout:
+        default_size:None,dp(56)
+        default_size_hint:1,None
+        size_hint_y:None
+        height:self.minimum_height
+        orientation:'vertical'
+
+<HistoryScreenv2>:
+    specialnames:['GraceID','Distance','Instruments','FAR','UpdateTime']
+    lookoutfor:['BBH','BNS','NSBH','MassGap','Terrestrial']
+    backcolors:[[202/255,214/255,235/255,0.8],[179/255,242/255,183/255,0.8],[238/255,242/255,179/255,0.8],[231/255,179/255,242/255,0.8],[242/255,179/255,179/255,0.8]]
+    names:['torep','torep']
+    canvas:
+        Color:
+            rgba: 1,1,1,1
+        Rectangle:
+            size:self.size
+            pos:self.pos
+    GridLayout:
+        rows:5
+        GridLayout:
+            cols:6
+            size_hint_y:0.05
+            Label:
+                text:'Key:'
+                color:(0,0,0,1)
+                canvas.before:
+                    Color:
+                        rgba: [0.2,0.25,0.4,1]
+                    Rectangle:
+                        pos:self.pos
+                        size:self.size
+            Label:
+                text:root.lookoutfor[0]
+                color:(0,0,0,1)
+                canvas.before:
+                    Color:
+                        rgba: root.backcolors[0]
+                    Rectangle:
+                        size:self.size
+                        pos:self.pos
+            Label:
+                text:root.lookoutfor[1]
+                color:(0,0,0,1)
+                canvas.before:
+                    Color:
+                        rgba: root.backcolors[1]
+                    Rectangle:
+                        size:self.size
+                        pos:self.pos
+            Label:
+                text:root.lookoutfor[2]
+                color:(0,0,0,1)
+                canvas.before:
+                    Color:
+                        rgba: root.backcolors[2]
+                    Rectangle:
+                        size:self.size
+                        pos:self.pos
+            Label:
+                text:root.lookoutfor[3]
+                color:(0,0,0,1)
+                canvas.before:
+                    Color:
+                        rgba: root.backcolors[3]
+                    Rectangle:
+                        size:self.size
+                        pos:self.pos
+            Label:
+                text:root.lookoutfor[4]
+                color:(0,0,0,1)
+                canvas.before:
+                    Color:
+                        rgba: root.backcolors[4]
+                    Rectangle:
+                        size:self.size
+                        pos:self.pos
+        HSeparator:
+            rgba:0,0,0,1
+            padding:2,0
+        GridLayout:
+            id:HisCols
+            cols:5
+            size_hint_y:0.08
+            HisColLabel:
+                text:root.specialnames[0]
+                color:(0,0,0,1)
+                sorttype:root.specialnames[0]
+                names:root.names
+                specialnames:root.specialnames
+                lookout:root.lookoutfor
+                backcolors:root.backcolors
+            HisColLabel:
+                text:root.specialnames[1]
+                color:(0,0,0,1)
+                sorttype:root.specialnames[1]
+                names:root.names
+                specialnames:root.specialnames
+                lookout:root.lookoutfor
+                backcolors:root.backcolors
+            HisColLabel:
+                text:root.specialnames[2]
+                color:(0,0,0,1)
+                sorttype:root.specialnames[2]
+                names:root.names
+                specialnames:root.specialnames
+                lookout:root.lookoutfor
+                backcolors:root.backcolors
+            HisColLabel:
+                text:root.specialnames[3]
+                color:(0,0,0,1)
+                sorttype:root.specialnames[3]
+                names:root.names
+                specialnames:root.specialnames
+                lookout:root.lookoutfor
+                backcolors:root.backcolors
+            HisColLabel:
+                text:root.specialnames[4]
+                color:(0,0,0,1)
+                sorttype:root.specialnames[4]
+                names:root.names
+                specialnames:root.specialnames
+                lookout:root.lookoutfor
+                backcolors:root.backcolors
+        RV:
+            id:rv
+            size_hint:1,0.79
+        BoxLayout:
+            size_hint_y:0.08
+            Button:
+                text:'back up database'
+                on_press:root.stupid()
+            Button:
+                text:'Main Menu'
+                on_press:root.manager.current = 'main'
+                    
 <InfoLabel@Label>:
     bg_col:(0,0,0,0)
     color:(1,1,1,1)
@@ -666,15 +851,19 @@
     color:0,0,0,1
     font_size:14
 
-<EventContainer@GridLayout>:
+<EventContainer>:
     name: None
     text0:'tobereplaced'
     text1:'tobereplaced'
     text2:'tobereplaced'
     text3:'tobereplaced'
     text4:'tobereplaced'
-    on_press: self.details()
+    row:
+    pop:
+    img:
+    namelist:
     bgcol: 0.9,0.9,0.9,1
+    on_press:self.details()
     canvas.before:
         Color:
             rgba: self.bgcol
@@ -687,6 +876,7 @@
         Line:
             width: 1
             rectangle: self.x, self.y, self.width, self.height
+    cols:5
     HisMainLabel:
         text:root.text0      
     HisMainLabel:

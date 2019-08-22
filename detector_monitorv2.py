@@ -47,8 +47,8 @@ def statusdetect():
             #red 
             toput = [1,0,0,1]
         elif statuses[i] == 1:
-            #blue
-            toput=[0,0,1,1]
+            #orange
+            toput=[228/255,119/255,10/255,1]
         elif statuses[i] == 2:
              #green
              toput=[0,1,0,1]

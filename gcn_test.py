@@ -163,12 +163,15 @@ def process_gcn(payload, root):
         elif key in lookoutfor:
             order.append(key)
             vals.append(float(value))
-            det_event[key]=str(format("{0:.3f}".format(float(value)*100)))+'%'
+            det_event[key]=str("{0:.3f}".format(float(value)*100))+'%'
             descriptions[key]=descs[i]
         elif key in lookoutfor2:
             order2.append(key)
             vals2.append(float(value))
-            det_event[key]=str(format("{0:.3f}".format(float(value)*100)))+'%'
+            if float(value) < 0.001:
+                det_event[key] = '< 0.1%'
+            else:  
+                det_event[key]=str("{0:.2f}".format(float(value)*100))+'%'
             descriptions[key]=descs[i]
         else:
             try:

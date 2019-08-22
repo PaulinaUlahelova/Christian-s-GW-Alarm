@@ -47,19 +47,10 @@ import os
 import re
 import numpy as np
 
-#import RPi.GPIO as GPIO
-#led1 = [22,24,23]
-#led2 = [10,25,9]
-#led3 = [8,0,11]
-#led4 = [7,12,1]
-#led5 = [6,13,5]
-#led6 = [16,20,26]
-#leds = [led1,led2,led3,led4,led5,led6]
-#pins = [22,24,23,10,25,9,8,0,11,7,12,1,6,13,5,16,20,26]
-#buzzpin = 27
-#GPIO.setmode(GPIO.BCM)
-#GPIO.setup(pins,GPIO.OUT)
-#GPIO.output(pins,GPIO.HIGH)
+#gpioimport board
+#gpioimport neopixel
+#
+#gpiopixels = neopixel.NeoPixel(board.D18,8,auto_write=False)
 
 class Event(IsDescription):
     AlertType=StringCol(30)
@@ -91,6 +82,7 @@ flag = 0
 main_flag=0
 newevent_flag=0
 
+Builder.unload_file("GWalarm.kv")
 Builder.load_file('GWalarm.kv')
 
 class MainButton(Button):
@@ -117,7 +109,6 @@ class MainScreen(Screen):
         def stop(obj):
             global main_flag
             main_flag=1
-            #GPIO.cleanup()
             App.get_running_app().stop()
 
         self.add_widget(layout)
@@ -136,6 +127,7 @@ class MainScreen(Screen):
             main_flag=0
             while True:
                 while True:
+                    print("i'm waiting")    
                     #check for the flag once per minute (same rate the file is polled)
                     if newevent_flag == 1:
                         newevent_flag=0
@@ -200,16 +192,20 @@ class HisColLabel(ToggleButtonBehavior,Label):
     lookout = ObjectProperty()
     backcolors=ObjectProperty()
     primed=NumericProperty()
+    imgsource=ObjectProperty()
     
     def on_press(self):
+        print('hi')
+        self.primed=1
         for child in self.parent.children:
-            child.imgsource='./neutral.png'
+            if child.primed != 1:
+                child.imgsource='./neutral.png'
+        self.primed=0
     
     def on_state(self,widget,value):
         Clock.schedule_once(lambda dt:self.on_state_for_real(widget,value),0)
     def on_state_for_real(self,widget,value):
         print('Pressed' )
-        print(self.primed)
         global flag
         flag = 1
         if value == 'down':
@@ -219,17 +215,107 @@ class HisColLabel(ToggleButtonBehavior,Label):
         else:
             self.newsort = self.sorttype+' Ascending'
             self.imgsource='./descending.png'
-        t2 = threading.Thread(target=historyUpdate,args=(App.get_running_app().root.children[0].children[0].children[1].children[0],
+        t2 = threading.Thread(target=historyUpdatev2,args=(App.get_running_app().root.get_screen('history').ids.rv,
                                                          self.names,self.specialnames,self.lookout,
                                                          self.backcolors,self.newsort),daemon=True)
         t2.start()
 
-class HistoryScreen(Screen):    
+#class HistoryScreen(Screen):    
+#    def __init__(self,**kwargs):
+#        super().__init__(**kwargs)
+#        layout = GridLayout(rows=3)
+#        self.add_widget(layout)
+#        
+#        if os.path.basename(os.getcwd()) != "event_data":
+#            try:
+#                os.chdir("./event_data")
+#            except:
+#                os.mkdir("./event_data")
+#                os.chdir("./event_data")    
+#                
+#        while True:
+#            try:
+#                h5file = open_file("Event Database",mode="r",title="eventinfo")
+#                break
+#            except:
+#                print("file in use... trying again in 5s")
+#                time.sleep(5)
+#        try:
+#            h5file.root.events
+#        except NoSuchNodeError:
+#            time.sleep(5)
+#            pass
+#        #grab a table, it doesn't matter which one!
+#        x=0
+#        for table in h5file.iter_nodes(where="/events",classname="Table"):
+#            tables=table
+#            if x==0:
+#                break
+#        
+#        def receive():
+#                #host="209.208.78.170"  
+#                gcn.listen(host="209.208.78.170",handler=process_gcn)
+#        t4 = threading.Thread(target=receive,daemon=True)
+#        t4.start()
+#        
+#        names = tables.colnames
+#        num_events = len(h5file.list_nodes(where="/events",classname="Table"))
+#        h5file.close()
+#        nameLay = GridLayout(cols=len(names),size_hint_y=0.1)
+#        specialnames=['GraceID','Distance','Instruments','FAR','UpdateTime']
+#        lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
+#        backcolors = [[202/255,214/255,235/255,0.8],[179/255,242/255,183/255,0.8],
+#                      [238/255,242/255,179/255,0.8],[231/255,179/255,242/255,0.8],
+#                      [242/255,179/255,179/255,0.8]]
+#        for name in specialnames:
+#            lab = HisColLabel(text=name,color=(0,0,0,1),sorttype=name)
+#            lab.names=names
+#            lab.specialnames=specialnames
+#            lab.lookout = lookoutfor
+#            lab.backcolors=backcolors
+#            nameLay.add_widget(lab)
+#        layout.add_widget(nameLay)
+#        hisScroll = ScrollView(do_scroll_x=False,do_scroll_y=True,size_hint=(1,0.7))
+#        layout.add_widget(hisScroll)
+#        hisGrid = GridLayout(rows=num_events*100,size_hint_y=None)
+#        hisGrid.bind(minimum_height=hisGrid.setter('height'))
+#        hisGrid.height=num_events*50
+#        hisScroll.add_widget(hisGrid)
+#        
+#        t2 = threading.Thread(target=historyUpdate,args=(hisGrid,names,specialnames,lookoutfor,backcolors),daemon=True)
+#        t2.start()
+#        '''backup stuff'''
+#        
+#        smalls=BoxLayout(size_hint_y=0.1)
+#        def refresh_all(arg):
+#            global main_flag
+#            main_flag = 1
+#            App.get_running_app().stop()
+#            App.get_running_app().root_window.close()
+#            print('shutdown')
+#            #time.sleep(5)
+#            sync_database()
+#            #Wait for it to finish....
+#            print('done - restart away')
+#        
+#        backupTestButton=Button(text='Back up database (takes ages)')
+#        smalls.add_widget(backupTestButton)
+#        
+#        def stupid(obj):
+#            content = Button(text='Ok')
+#            content.bind(on_press=refresh_all)
+#            confirm = Popup(title='Are you sure?',content=content,size_hint=(0.4,0.4))
+#            confirm.open()
+#            
+#        backupTestButton.bind(on_press=stupid) 
+#         
+#        button2 =MainButton(text='Main Menu',name='main')
+#        smalls.add_widget(button2)
+#        layout.add_widget(smalls)
+        
+class HistoryScreenv2(Screen):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-        layout = GridLayout(rows=3)
-        self.add_widget(layout)
-        
         if os.path.basename(os.getcwd()) != "event_data":
             try:
                 os.chdir("./event_data")
@@ -262,35 +348,6 @@ class HistoryScreen(Screen):
         t4 = threading.Thread(target=receive,daemon=True)
         t4.start()
         
-        names = tables.colnames
-        num_events = len(h5file.list_nodes(where="/events",classname="Table"))
-        h5file.close()
-        nameLay = GridLayout(cols=len(names),size_hint_y=0.1)
-        specialnames=['GraceID','Distance','Instruments','FAR','UpdateTime']
-        lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
-        backcolors = [[202/255,214/255,235/255,0.8],[179/255,242/255,183/255,0.8],
-                      [238/255,242/255,179/255,0.8],[231/255,179/255,242/255,0.8],
-                      [242/255,179/255,179/255,0.8]]
-        for name in specialnames:
-            lab = HisColLabel(text=name,color=(0,0,0,1),sorttype=name)
-            lab.names=names
-            lab.specialnames=specialnames
-            lab.lookout = lookoutfor
-            lab.backcolors=backcolors
-            nameLay.add_widget(lab)
-        layout.add_widget(nameLay)
-        hisScroll = ScrollView(do_scroll_x=False,do_scroll_y=True,size_hint=(1,0.7))
-        layout.add_widget(hisScroll)
-        hisGrid = GridLayout(rows=num_events*100,size_hint_y=None)
-        hisGrid.bind(minimum_height=hisGrid.setter('height'))
-        hisGrid.height=num_events*50
-        hisScroll.add_widget(hisGrid)
-        
-        t2 = threading.Thread(target=historyUpdate,args=(hisGrid,names,specialnames,lookoutfor,backcolors),daemon=True)
-        t2.start()
-        '''backup stuff'''
-        
-        smalls=BoxLayout(size_hint_y=0.1)
         def refresh_all(arg):
             global main_flag
             main_flag = 1
@@ -298,26 +355,169 @@ class HistoryScreen(Screen):
             App.get_running_app().root_window.close()
             print('shutdown')
             #time.sleep(5)
-            #GPIO.cleanup()
             sync_database()
             #Wait for it to finish....
             print('done - restart away')
-        
-        backupTestButton=Button(text='Back up database (takes ages)')
-        smalls.add_widget(backupTestButton)
-        
+            
         def stupid(obj):
             content = Button(text='Ok')
             content.bind(on_press=refresh_all)
             confirm = Popup(title='Are you sure?',content=content,size_hint=(0.4,0.4))
             confirm.open()
             
-        backupTestButton.bind(on_press=stupid) 
-         
-        button2 =MainButton(text='Main Menu',name='main')
-        smalls.add_widget(button2)
-        layout.add_widget(smalls)
+        names = tables.colnames
+#        num_events = len(h5file.list_nodes(where="/events",classname="Table"))
+        h5file.close()
+        specialnames=['GraceID','Distance','Instruments','FAR','UpdateTime']
+        lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
+        backcolors = [[202/255,214/255,235/255,0.8],[179/255,242/255,183/255,0.8],
+                      [238/255,242/255,179/255,0.8],[231/255,179/255,242/255,0.8],
+                      [242/255,179/255,179/255,0.8]]
         
+        for child in self.ids.HisCols.children:
+            child.names = names
+        t2 = threading.Thread(target=historyUpdatev2,args=(self.ids.rv,names,specialnames,lookoutfor,backcolors),daemon=True)
+        t2.start()
+        
+def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending'):
+    print('begin hist update')
+    '''An important function that is responsible for populating and repopulating the history screen.'''
+    global flag
+    global main_flag
+    #reset stop flag
+    main_flag=0
+    if os.path.basename(os.getcwd()) != "event_data":
+        try:
+            os.chdir("./event_data")
+        except:
+            os.mkdir("./event_data")
+            os.chdir("./event_data")    
+        
+    #initial check to ensure file exists with necessary groupings
+    while True:
+        try:
+            h5file = open_file("Event Database",mode="r",title="eventinfo")
+            break
+        except:
+            print("file in use... trying again in 5s")
+            time.sleep(5)
+    try:
+        h5file.root.events
+    except NoSuchNodeError:
+        time.sleep(5)
+        pass
+    h5file.close()
+    
+    #initial stat
+    stats = os.stat("./Event Database")
+    lastaccess= stats.st_mtime
+    first = 1
+    while True:
+        stats = os.stat("./Event Database")
+        access = stats.st_mtime 
+        if access != lastaccess or first == 1:
+            lastaccess=access
+            
+            while True:
+                try:
+                    h5file = open_file("Event Database",mode="r",title="eventinfo")
+                    break
+                except:
+                    print("file in use... trying again in 5s")
+                    time.sleep(5)
+            
+            #get all tables
+            tables = [table for table in h5file.iter_nodes(where="/events",classname="Table")]
+            sort_vars = []
+            
+            widgetids = []
+            for child in rv.data:
+                widgetids.append(child['name'])
+            
+            '''Iterate through all events, re-drawing row-by-row the history viewer'''
+            for table in tables:
+                row=table[-1]
+                if 'Time' in sorttype:
+                    sort_vars.append(row['UpdateTime'].decode().split()[0])
+                elif 'Distance' in sorttype:
+                    sort_vars.append(float(row['Distance'].decode().split()[0]))
+                elif 'GraceID' in sorttype:
+                    string = str(row['GraceID'].decode())
+                    sort_vars.append(int(re.sub("[a-zA-Z]","",string)))
+                elif 'FAR' in sorttype:
+                    sort_vars.append(float(row['FAR'].decode().split()[2]))
+                elif 'Instruments' in sorttype:
+                    sort_vars.append(row['Instruments'].decode())
+            if sort_vars != []:
+                if 'Descending' in sorttype:
+                    try:
+                        tables = [x for _,x in sorted(zip(sort_vars,tables),key=len[0])]
+                    except TypeError:
+                        tables2=[]
+                        sort_indexes = np.argsort(np.array(sort_vars))
+                        for index in sort_indexes:
+                            tables2.append(tables[index])
+                        tables=tables2
+                elif 'Ascending' in sorttype:
+                    try:
+                        tables = [x for _,x in reversed(sorted(zip(sort_vars,tables)))]
+                    except TypeError:
+                        tables2=[]
+                        sort_indexes = reversed(np.argsort(np.array(sort_vars)))
+                        for index in sort_indexes:
+                            tables2.append(tables[index])
+                        tables=tables2
+            new_data = []
+            for i,table in enumerate(tables):
+                to_add_to_data={}
+                row = table[-1]
+                orderedrow = []
+                to_add_to_data['namelist']=names
+                to_add_to_data['name']=row['GraceID'].decode()
+                for key in names:
+                    orderedrow.append(row[key].decode())
+                to_add_to_data['row'] = orderedrow
+                    
+                if row['GraceID'].decode() not in widgetids:
+                    if first == 0:
+                        '''LAZY SOLUTION - NOT VERY FUTUREPROOF''' #FIXME
+                        '''NEW EVENT!!!'''
+                        global newevent_flag
+                        newevent_flag=1
+                
+                for i in range(len(specialnames)):
+                    string=row[specialnames[i]]
+                    if specialnames[i] == 'Distance':
+                        to_add_to_data['text'+str(i)] = string.decode().replace('+-',u'\xb1')
+                    else:
+                        to_add_to_data['text'+str(i)] = string.decode() 
+                stats = []
+                for name in lookoutfor:
+                    stats.append(float(row[name].decode().strip('%')))
+                to_add_to_data['bgcol'] = backcolors[np.argmax(stats)]
+                new_data.append(to_add_to_data)
+                
+            rv.data = new_data
+            
+            print('Event History Updated...')
+            h5file.close()
+            #reset the flag
+            first = 0
+
+        waittime = 10   
+        i=0
+        while i < waittime:
+            if flag ==1:
+                print('his_thread restart')
+                flag=0
+                return
+            if main_flag ==1:
+                print('history thread closing...')
+                return
+            i+=0.2
+            time.sleep(0.2)
+
+
 class HeadingLabel(ToggleButtonBehavior,Label):
     def on_state(self,widget,value):
         if value == 'down':
@@ -401,185 +601,185 @@ class EventContainer(ButtonBehavior,GridLayout):
         self.pop.row = self.row
         self.pop.open()
 
-def historyUpdate(obj,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending'):
-    print('begin hist update')
-    '''An important function that is responsible for populating and repopulating the history screen.'''
-    global flag
-    global main_flag
-    #reset stop flag
-    main_flag=0
-    if os.path.basename(os.getcwd()) != "event_data":
-        try:
-            os.chdir("./event_data")
-        except:
-            os.mkdir("./event_data")
-            os.chdir("./event_data")    
-        
-    #initial check to ensure file exists with necessary groupings
-    while True:
-        try:
-            h5file = open_file("Event Database",mode="r",title="eventinfo")
-            break
-        except:
-            print("file in use... trying again in 5s")
-            time.sleep(5)
-    try:
-        h5file.root.events
-    except NoSuchNodeError:
-        time.sleep(5)
-        pass
-    h5file.close()
-    
-    #initial stat
-    stats = os.stat("./Event Database")
-    lastaccess= stats.st_mtime
-    first = 1
-    while True:
-        stats = os.stat("./Event Database")
-        access = stats.st_mtime 
-        if access != lastaccess or first == 1:
-            lastaccess=access
-
-
-            #Clear widgets
-            #obj.clear_widgets()
-            while True:
-                try:
-                    h5file = open_file("Event Database",mode="r",title="eventinfo")
-                    break
-                except:
-                    print("file in use... trying again in 5s")
-                    time.sleep(5)
-            
-            #get all tables
-            tables = [table for table in h5file.iter_nodes(where="/events",classname="Table")]
-            sort_vars = []
-            
-            '''Check the table list and compare with current labels to see if boxes need changed'''
-            children = [child for child in obj.children]
-            #ids IN THE DISPLAY
-            widgetids = []
-            for child in children:
-                widgetids.append(child.name)
-            #ids IN THE DATABASE
-            presentids = [child[-1]['GraceID'].decode() for child in h5file.root.events]
-            
-            '''Iterate through all events, re-drawing row-by-row the history viewer'''
-            for table in tables:
-                row=table[-1]
-                if 'Time' in sorttype:
-                    sort_vars.append(row['UpdateTime'].decode().split()[0])
-                elif 'Distance' in sorttype:
-                    sort_vars.append(float(row['Distance'].decode().split()[0]))
-                elif 'GraceID' in sorttype:
-                    string = str(row['GraceID'].decode())
-                    sort_vars.append(int(re.sub("[a-zA-Z]","",string)))
-                elif 'FAR' in sorttype:
-                    sort_vars.append(float(row['FAR'].decode().split()[2]))
-                elif 'Instruments' in sorttype:
-                    sort_vars.append(row['Instruments'].decode())
-            if sort_vars != []:
-                if 'Descending' in sorttype:
-                    try:
-                        tables = [x for _,x in sorted(zip(sort_vars,tables),key=len[0])]
-                    except TypeError:
-                        tables2=[]
-                        sort_indexes = np.argsort(np.array(sort_vars))
-                        for index in sort_indexes:
-                            tables2.append(tables[index])
-                        tables=tables2
-                elif 'Ascending' in sorttype:
-                    try:
-                        tables = [x for _,x in reversed(sorted(zip(sort_vars,tables)))]
-                    except TypeError:
-                        tables2=[]
-                        sort_indexes = reversed(np.argsort(np.array(sort_vars)))
-                        for index in sort_indexes:
-                            tables2.append(tables[index])
-                        tables=tables2
-            
-            #print(widgetids,presentids)
-            for i,table in enumerate(tables):
-                #read in the last row (most up to date)
-                row = table[-1]
-                orderedrow = []
-                for key in names:
-                    orderedrow.append(row[key].decode())
-                if row['GraceID'].decode() not in widgetids:
-                    if first == 0:
-                        '''LAZY SOLUTION - NOT VERY FUTUREPROOF''' #FIXME
-                        '''NEW EVENT!!!'''
-                        global newevent_flag
-                        newevent_flag=1
-                        
-                    grid = EventContainer(cols=len(specialnames)+1,name=row['GraceID'].decode())
-                    grid.namelist=names
-#                    for i in range(len(specialnames)):
-                        #string=row[specialnames[i]]
-#                        if specialnames[i] == 'Distance':
-#                            getattr(grid,'text'+str(i))=string.decode().replace('+-',u'\xb1')
-                        #else:    
-                        #FIXME: ADD NEAT TEXT BY PARSING INPUT TEXT
-                            #getattr(grid,'text'+str(i)) = string.decode()
-                            #lab2 = Label(text=decoded,color=(0,0,0,1),font_size=(16))
-#                        lab2 = Label(text=getattr(grid,'text'+str(i)),color=(0,0,0,1),font_size=(16))
-#                        grid.add_widget(lab2)
-                    obj.add_widget(grid,i)
-                else:
-                    grid = obj.children[i]
-                grid.row=orderedrow
-                for i in range(len(specialnames)):
-                    string=row[specialnames[i]]
-                    if specialnames[i] == 'Distance':
-                        setattr(grid,'text'+str(i),string.decode().replace('+-',u'\xb1'))
-                    elif specialnames[i] == 'GraceID':
-                        grid.name=string.decode()
-                        setattr(grid,'text'+str(i),string.decode()) 
-                    else:    
-                    #FIXME: ADD NEAT TEXT BY PARSING INPUT TEXT
-                        setattr(grid,'text'+str(i),string.decode())  
-                stats = []
-                for name in lookoutfor:
-                    stats.append(float(row[name].decode().strip('%')))
-                winner = lookoutfor[np.argmax(stats)]
-                grid.bgcol = backcolors[np.argmax(stats)]
-                #print(grid.bgcol)
-            for i,child in enumerate(children):
-                if widgetids[i] not in presentids:
-                    obj.remove_widget(child)
-                #orderedrow = []
+#def historyUpdate(obj,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending'):
+#    print('begin hist update')
+#    '''An important function that is responsible for populating and repopulating the history screen.'''
+#    global flag
+#    global main_flag
+#    #reset stop flag
+#    main_flag=0
+#    if os.path.basename(os.getcwd()) != "event_data":
+#        try:
+#            os.chdir("./event_data")
+#        except:
+#            os.mkdir("./event_data")
+#            os.chdir("./event_data")    
+#        
+#    #initial check to ensure file exists with necessary groupings
+#    while True:
+#        try:
+#            h5file = open_file("Event Database",mode="r",title="eventinfo")
+#            break
+#        except:
+#            print("file in use... trying again in 5s")
+#            time.sleep(5)
+#    try:
+#        h5file.root.events
+#    except NoSuchNodeError:
+#        time.sleep(5)
+#        pass
+#    h5file.close()
+#    
+#    #initial stat
+#    stats = os.stat("./Event Database")
+#    lastaccess= stats.st_mtime
+#    first = 1
+#    while True:
+#        stats = os.stat("./Event Database")
+#        access = stats.st_mtime 
+#        if access != lastaccess or first == 1:
+#            lastaccess=access
+#
+#
+#            #Clear widgets
+#            #obj.clear_widgets()
+#            while True:
+#                try:
+#                    h5file = open_file("Event Database",mode="r",title="eventinfo")
+#                    break
+#                except:
+#                    print("file in use... trying again in 5s")
+#                    time.sleep(5)
+#            
+#            #get all tables
+#            tables = [table for table in h5file.iter_nodes(where="/events",classname="Table")]
+#            sort_vars = []
+#            
+#            '''Check the table list and compare with current labels to see if boxes need changed'''
+#            children = [child for child in obj.children]
+#            #ids IN THE DISPLAY
+#            widgetids = []
+#            for child in children:
+#                widgetids.append(child.name)
+#            #ids IN THE DATABASE
+#            presentids = [child[-1]['GraceID'].decode() for child in h5file.root.events]
+#            
+#            '''Iterate through all events, re-drawing row-by-row the history viewer'''
+#            for table in tables:
+#                row=table[-1]
+#                if 'Time' in sorttype:
+#                    sort_vars.append(row['UpdateTime'].decode().split()[0])
+#                elif 'Distance' in sorttype:
+#                    sort_vars.append(float(row['Distance'].decode().split()[0]))
+#                elif 'GraceID' in sorttype:
+#                    string = str(row['GraceID'].decode())
+#                    sort_vars.append(int(re.sub("[a-zA-Z]","",string)))
+#                elif 'FAR' in sorttype:
+#                    sort_vars.append(float(row['FAR'].decode().split()[2]))
+#                elif 'Instruments' in sorttype:
+#                    sort_vars.append(row['Instruments'].decode())
+#            if sort_vars != []:
+#                if 'Descending' in sorttype:
+#                    try:
+#                        tables = [x for _,x in sorted(zip(sort_vars,tables),key=len[0])]
+#                    except TypeError:
+#                        tables2=[]
+#                        sort_indexes = np.argsort(np.array(sort_vars))
+#                        for index in sort_indexes:
+#                            tables2.append(tables[index])
+#                        tables=tables2
+#                elif 'Ascending' in sorttype:
+#                    try:
+#                        tables = [x for _,x in reversed(sorted(zip(sort_vars,tables)))]
+#                    except TypeError:
+#                        tables2=[]
+#                        sort_indexes = reversed(np.argsort(np.array(sort_vars)))
+#                        for index in sort_indexes:
+#                            tables2.append(tables[index])
+#                        tables=tables2
+#            
+#            #print(widgetids,presentids)
+#            for i,table in enumerate(tables):
+#                #read in the last row (most up to date)
+#                row = table[-1]
+#                orderedrow = []
 #                for key in names:
 #                    orderedrow.append(row[key].decode())
+#                if row['GraceID'].decode() not in widgetids:
+#                    if first == 0:
+#                        '''LAZY SOLUTION - NOT VERY FUTUREPROOF''' #FIXME
+#                        '''NEW EVENT!!!'''
+#                        global newevent_flag
+#                        newevent_flag=1
+#                        
+#                    grid = EventContainer(cols=len(specialnames)+1,name=row['GraceID'].decode())
+#                    grid.namelist=names
+##                    for i in range(len(specialnames)):
+#                        #string=row[specialnames[i]]
+##                        if specialnames[i] == 'Distance':
+##                            getattr(grid,'text'+str(i))=string.decode().replace('+-',u'\xb1')
+#                        #else:    
+#                        #FIXME: ADD NEAT TEXT BY PARSING INPUT TEXT
+#                            #getattr(grid,'text'+str(i)) = string.decode()
+#                            #lab2 = Label(text=decoded,color=(0,0,0,1),font_size=(16))
+##                        lab2 = Label(text=getattr(grid,'text'+str(i)),color=(0,0,0,1),font_size=(16))
+##                        grid.add_widget(lab2)
+#                    obj.add_widget(grid,i)
+#                else:
+#                    grid = obj.children[i]
 #                grid.row=orderedrow
-#                
 #                for i in range(len(specialnames)):
 #                    string=row[specialnames[i]]
 #                    if specialnames[i] == 'Distance':
-#                        decoded=string.decode().replace('+-',u'\xb1')
+#                        setattr(grid,'text'+str(i),string.decode().replace('+-',u'\xb1'))
+#                    elif specialnames[i] == 'GraceID':
+#                        grid.name=string.decode()
+#                        setattr(grid,'text'+str(i),string.decode()) 
 #                    else:    
 #                    #FIXME: ADD NEAT TEXT BY PARSING INPUT TEXT
-#                        decoded = string.decode()
-#                    lab2 = Label(text=decoded,color=(0,0,0,1),font_size=(16))
-#                    grid.add_widget(lab2)
-#                obj.add_widget(grid,len(obj.children))
-            obj.do_layout()
-            print('Event History Updated...')
-            h5file.close()
-            #reset the flag
-            first = 0
-
-        waittime = 10   
-        i=0
-        while i < waittime:
-            if flag ==1:
-                print('his_thread restart')
-                flag=0
-                return
-            if main_flag ==1:
-                print('history thread closing...')
-                return
-            i+=1
-            time.sleep(1)
+#                        setattr(grid,'text'+str(i),string.decode())  
+#                stats = []
+#                for name in lookoutfor:
+#                    stats.append(float(row[name].decode().strip('%')))
+#                winner = lookoutfor[np.argmax(stats)]
+#                grid.bgcol = backcolors[np.argmax(stats)]
+#                #print(grid.bgcol)
+#            for i,child in enumerate(children):
+#                if widgetids[i] not in presentids:
+#                    obj.remove_widget(child)
+#                #orderedrow = []
+##                for key in names:
+##                    orderedrow.append(row[key].decode())
+##                grid.row=orderedrow
+##                
+##                for i in range(len(specialnames)):
+##                    string=row[specialnames[i]]
+##                    if specialnames[i] == 'Distance':
+##                        decoded=string.decode().replace('+-',u'\xb1')
+##                    else:    
+##                    #FIXME: ADD NEAT TEXT BY PARSING INPUT TEXT
+##                        decoded = string.decode()
+##                    lab2 = Label(text=decoded,color=(0,0,0,1),font_size=(16))
+##                    grid.add_widget(lab2)
+##                obj.add_widget(grid,len(obj.children))
+#            obj.do_layout()
+#            print('Event History Updated...')
+#            h5file.close()
+#            #reset the flag
+#            first = 0
+#
+#        waittime = 10   
+#        i=0
+#        while i < waittime:
+#            if flag ==1:
+#                print('his_thread restart')
+#                flag=0
+#                return
+#            if main_flag ==1:
+#                print('history thread closing...')
+#                return
+#            i+=1
+#            time.sleep(1)
 def statusupdate(obj):
     global main_flag
     main_flag=0
@@ -588,28 +788,23 @@ def statusupdate(obj):
         
         for i,elem in enumerate(data):
             setattr(obj,'det'+str(i+1)+'props',elem)
-#        for i,stat in enumerate(stats):
-#            _led = leds[i]
-#            if stat == 0:
-#                #red
-#                GPIO.output(_led[0],GPIO.LOW)
-#                GPIO.output(_led[1],GPIO.HIGH)
-#                GPIO.output(_led[2],GPIO.HIGH)
-#            if stat == 1:
-#                #blue
-#                GPIO.output(_led[0],GPIO.HIGH)
-#                GPIO.output(_led[1],GPIO.HIGH)
-#                GPIO.output(_led[2],GPIO.LOW)
-#            if stat == 2:
-#                #green
-#                GPIO.output(_led[0],GPIO.HIGH)
-#                GPIO.output(_led[1],GPIO.LOW)
-#                GPIO.output(_led[2],GPIO.HIGH)
-#            if stat == 3:
-#                #yellow
-#                GPIO.output(_led[0],GPIO.LOW)
-#                GPIO.output(_led[1],GPIO.LOW)
-#                GPIO.output(_led[2],GPIO.HIGH)
+        
+        '''LED CONTROL (replace #gpio with "" to use)'''
+        #gpiofor i,stat in enumerate(stats):
+            #gpioif stat == 0:
+                #red
+                #gpiopixels[i] = (255,0,0)
+            #gpioif stat == 1:
+                #orange
+                #gpiopixels[i] = (228,119,10) 
+            #gpioif stat == 2:
+                #green
+                #gpiopixels[i] = (17,221,17)
+            #gpioif stat == 3:
+                #yellow
+                #gpiopixels[i] = (0,0,0)
+        #gpiopixels.show()
+        
         waittime = 30
         i = 0
         while i < waittime:
@@ -693,13 +888,79 @@ def plotupdate(obj):
             time.sleep(5)
 
 class MainScreenv2(Screen):
-    pass
-
+    def __init__(self,**kwargs):
+        super().__init__(**kwargs)
+        
+        def event_waiting():
+            '''New event popup handler'''
+            global newevent_flag
+            global main_flag
+            newevent_flag=0
+            main_flag=0
+            while True:
+                while True:
+                    #check for the flag once per minute (same rate the file is polled)
+                    if newevent_flag == 1:
+                        newevent_flag=0
+                        #skip a level up to execute the rest of the loop, then back to waiting.
+                        print('New event has been detected!!')
+                        break
+                    if main_flag == 1:
+                        print('Event listener #2 closing...')
+                        #return takes you right out of the function
+                        return
+                    time.sleep(5)
+                
+                #Read in the new event
+                if os.path.basename(os.getcwd()) != "event_data":
+                    try:
+                        os.chdir("./event_data")
+                    except:
+                        os.mkdir("./event_data")
+                        os.chdir("./event_data")
+                while True:
+                    try:
+                        h5file = open_file("Event Database",mode="r",title="eventinfo")
+                        break
+                    except:
+                        print("file in use... trying again in 5s")
+                        time.sleep(5)
+                try:
+                    h5file.root.events
+                except NoSuchNodeError:
+                    time.sleep(5)
+                    pass      
+                
+                #parse the event data file for the most recent event to be loaded: that's the name
+                file = open("PreviousEventToRead.xml").read()
+                def search(line):
+                    result = re.search('<Param name="GraceID" dataType="string" value=(.*)ucd="meta.id">\n',
+                                       str(line))
+                    return result.group(1)
+                eventid = search(file)
+                for tab in h5file.list_nodes("/events"):
+                    if str(tab.name) in eventid:
+                        new_event_table=tab
+#                    if tab.name == eventid:
+#                        new_event_table = tab
+                namelist = new_event_table.colnames
+                new_event_row = new_event_table[-1]
+                orderedrow = []
+                for key in namelist:
+                    orderedrow.append(new_event_row[key].decode()) 
+                pop = InfoPop(title='New Event Detected!',namelist=namelist,row=orderedrow)
+                pop.open()
+                h5file.close()
+                
+        event_waiting_thread = threading.Thread(target=event_waiting)
+        event_waiting_thread.start()
+        
 class AboutPop(Popup):
     def stop(self):
         global main_flag
         main_flag = 1 
         self.dismiss()
+        Builder.unload_file("GWalarm.kv")
         App.get_running_app().stop()
         
 class StatusScreenv2(Screen):
@@ -707,9 +968,15 @@ class StatusScreenv2(Screen):
     det2props = ListProperty()
     det3props = ListProperty()
     det4props = ListProperty()
-    det5props = ListProperty()    
+    det5props = ListProperty()   
+    bios=ListProperty()
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
+        self.bios=(['LIGO Livingston was one of two trailblazing gravitational wave detectors (the other being LIGO Hanford). The observatory uses ultra-high-vacuum technology to achieve extremely precise measurement capability. \n Forming a pair seperated by over 3000km, LIGO Hanford and Livingston observed gravitational waves for the first time in history in February, 2016.',
+                       'LIGO Hanford was one of two trailblazing gravitational wave detectors (the other being LIGO Livingston). The observatory uses ultra-high-vacuum technology to achieve extremely precise measurement capability. \n Forming a pair seperated by over 3000km, LIGO Hanford and Livingston observed gravitational waves for the first time in history in February, 2016.',
+                       "The Virgo interferometer is Europe's largest to date. Currently, Virgo is being modified and improved to its next stage, 'Advanced Virgo', which aims to improve sensitivity by a factor of 10 by installing new adaptive-optic mirror systems and additional cryotraps to prevent the entry of residual particles. \n Virgo made its first GW detection, alongside LIGO, in August 2017 - the merger of two neutron stars.", 
+                       'GEO600 is a detector located in Hanover, Germany. Although smaller than other counterparts worldwide, the detector is still capable of extremely precise measurement, only a few orders of magnitude less sensitive than significantly larger detectors. It has been a vital proof of concept for many advanced technologies and features that will surely be seen in future gravitational wave observatories. ',
+                       "The Kamioka Gravitational Wave Detector (KAGRA) is the world's first underground gravitational wave observatory currently under construction in the Kamioka mine, Japan, with the University of Tokyo. \n The detector will utilise cryogenic cooling to reduce the interference of thermal noise in the measuring process. It will be completed towards the end of 2019."])
         t = threading.Thread(target=statusupdate,args=(self,),daemon=True)
         t.start()
   
@@ -726,6 +993,7 @@ class StatusScreenv2(Screen):
         def change(presser):
             App.get_running_app().root.current='statinfo'
             App.get_running_app().root.current_screen.detlist = presser.prop
+            App.get_running_app().root.current_screen.bio = presser.bio
         Clock.schedule_once(lambda dt: change(presser),0.5)
 
 class PlotsScreen(Screen):
@@ -738,6 +1006,8 @@ class PlotsScreen(Screen):
         t3.start()
         
 class StatBio(Screen):
+    detlist=ListProperty()
+    bio=ObjectProperty()
     def change(obj):    
         App.get_running_app().root.current = 'status'
         App.get_running_app().root.transition=NoTransition()
@@ -753,7 +1023,7 @@ class StatBio(Screen):
 
 class MyApp(App):
     def build_config(self,config):
-        config.setdefaults('Section',{'InitialBackup':'0'})
+        config.setdefaults('Section',{'PeriodicBackup':'0'})
     def on_start(self):
         global flag
         global main_flag
@@ -764,18 +1034,21 @@ class MyApp(App):
         
     def build(self):
         config = self.config
-        if config.get('Section','InitialBackup') == '0':
-            print('Performing Initial Event Sync. Please be patient - this may take a while...')
+        now = time.time()
+        last_backup =float(config.get('Section','PeriodicBackup'))
+        print('It has been '+ str((now - last_backup)/86400) + ' days since the last backup')
+        if now-last_backup > 86400:
+            print('Performing Periodic Event Sync. Please be patient - this may take a while...')
             sync_database()
-            config.set('Section','InitialBackup','1')
+            config.set('Section','PeriodicBackup',now)
             config.write()
             print('Initial Event Sync Complete...')
-        elif config.get('Section','InitialBackup') == '1':
+        else:
             print('Event Sync not required...')
         
         sm = ScreenManager()
         sm.add_widget(MainScreenv2(name='main'))
-        sm.add_widget(HistoryScreen(name='history'))
+        sm.add_widget(HistoryScreenv2(name='history'))
         sm.add_widget(StatusScreenv2(name='status'))
         sm.add_widget(PlotsScreen(name='plots'))
         sm.add_widget(StatBio(name='statinfo'))
