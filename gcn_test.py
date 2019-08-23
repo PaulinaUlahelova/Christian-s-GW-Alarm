@@ -51,7 +51,7 @@ def process_gcn(payload, root):
     if root.attrib['role'] != 'observation':
         return
     #acknowledge
-    #print('I have received a notice!!')
+    #print('I have received a notice!')
     
     #ensure correct working directory and open the table
     if os.path.basename(os.getcwd()) != "event_data":
@@ -142,6 +142,9 @@ def process_gcn(payload, root):
     descriptions={}
     # Print all parameters.
     i=0
+    
+    print(params['GraceID'])
+    
     for key, value in params.items():
         #print(key, '=', value)
         if key == 'FAR':

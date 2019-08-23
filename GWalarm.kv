@@ -36,7 +36,7 @@
         color:0,0,0,1
         text_size:self.width,None
         halign:'left'
-        font_size:22
+        font_size:dp(22)
         size_hint_y:0.2
     HSeparator:
         rgba: 0,0,0,1
@@ -47,7 +47,7 @@
         text_size:self.width,None
         height:self.texture_size[1]
         halign:'left'
-        font_size:18
+        font_size:dp(18)
         size_hint_y:0.35
     BoxLayout:
         padding:2,0
@@ -80,25 +80,29 @@
                     pos:self.pos
                     size:self.size
             rows:2
-            cols:3
             size_hint_y:0.4
-            Image:
-                source:'./IGR.jpg'
-                size_hint_x:0.15
-            Label:
-                size_hint_x:0.7
-            Button:
-                text:'About'
-                on_press:Factory.AboutPop().open()
-                size_hint_x:0.15
-            Label:
-                size_hint_x:0.15
-            Label:
-                text:'Gravitational Wave Alarm'
-                font_size:32
-                size_hint_x:0.7
-            Label:
-                size_hint_x:0.15
+            BoxLayout:
+                padding:[3,3]
+                Image:
+                    source:'./UofG.jpg'
+                    size_hint_x:0.3
+                Label:
+                    size_hint_x:0.6
+                Button:
+                    text:'About'
+                    on_press:Factory.AboutPop().open()
+                    size_hint_x:0.15
+            BoxLayout:
+                padding:[3,3]
+                Image:
+                    source:'./IGR.jpg'
+                    size_hint_x:0.1
+                Label:
+                    text:'Gravitational Wave Alarm'
+                    font_size:dp(36)
+                    size_hint_x:0.8
+                Label:
+                    size_hint_x:0.1
         GridLayout:
             canvas.before:
                 Color:
@@ -126,12 +130,13 @@
                 imgsource:'./event_data/LIGO Livingston.jpg'
 
 <WrapLabel@Label>:
-    text_size: root.width, None
-    size:self.texture_size
+    text_size: self.width,None
+    size_hint_y:None
     height:self.texture_size[1]
+    padding:10,10
     halign: 'center'
     valign: 'middle'
-    font_size: 14
+    font_size:dp(16)
     
 <HisColLabel>:
     names:
@@ -162,7 +167,7 @@
     size:self.texture_size
     halign: 'center'
     valign: 'middle'
-    font_size: 14
+    font_size:dp(14)
 
     
 <DetectLabel@ButtonBehavior+Label>:
@@ -170,7 +175,7 @@
     halign:'center'
     color:(0,0,0,1)
     bg_col:self.prop[3]
-    font_size:14
+    font_size:dp(14)
     canvas.before:
         Color:
             rgba: self.bg_col or [1,1,1,1]
@@ -260,14 +265,17 @@
                 Label:
                     text: 'Detector name'
                     color:0,0,0,1
+                    halign:'center'
                 Label:
                     text: 'Current status'
                     color:0,0,0,1
+                    halign:'center'
                 Label:
                     text: 'Duration \n (hours:minutes)'
                     #size_hint_y:None
-                    text_size:self.size
+                    #text_size:self.size
                     #height:self.texture_size[1]
+                    halign:'center'
                     color:0,0,0,1
                     #valign:'bottom'
                     
@@ -283,15 +291,15 @@
             GridLayout:
                 rows:3
                 size_hint_x:0.84
-                padding:(0,30)
+                padding:(0,20)
                 Label:
                     text:'Welcome to the Detector Portal!'
-                    font_size:30
+                    font_size:dp(30)
                     color:0,0,0,1
                     size_hint_y:0.1
                 Label:
                     text:'Tap any of the detectors on-screen to learn more.'
-                    fontsize:20
+                    fontsize:22
                     color:0,0,0,1
                     size_hint_y:0.1
                 AsyncImage:
@@ -384,7 +392,7 @@
     text_size: self.width,None
     height:self.texture_size[1]
     size_hint_y:None
-    font_size:16
+    font_size:dp(16)
     line_height:1.2
     markup:True
     color:0,0,0,1
@@ -413,7 +421,7 @@
             Label:
                 text:root.detlist[0]
                 size_hint_y: 0.15
-                font_size:32
+                font_size:dp(32)
                 text_size: self.width, None
                 halign: 'left'
                 color:0,0,0,1
@@ -421,7 +429,7 @@
             Label:
                 text:root.detlist[1]+' ' + root.detlist[2]
                 size_hint_y:0.05
-                font_size:24
+                font_size:dp(24)
                 text_size: self.width, None
                 halign: 'left'
                 valign:'top'
@@ -460,6 +468,37 @@
         height:self.minimum_height
         orientation:'vertical'
 
+<KeyLabel@GridLayout>:
+    bgcol:1,1,1,1
+    keytext:'test'
+    cols:2
+    canvas.before:
+        Color:
+            rgba: 0,0,0,1
+        Line:
+            width: 1
+            points:self.x,self.y,self.x,self.y+self.height
+    BoxLayout:
+        padding:10,10
+        Label:
+            canvas.before:
+                Color:
+                    rgba: root.bgcol
+                Rectangle:
+                    pos:self.pos
+                    size:self.size
+            canvas:
+                Color:
+                    rgba: 0,0,0,1 
+                Line:
+                    width:1
+                    rectangle:self.x,self.y,self.width,self.height
+            size_hint:1,1
+    Label:
+        text:root.keytext
+        color:0,0,0,1
+        font_size:dp(12)
+        
 <HistoryScreenv2>:
     specialnames:['GraceID','Distance','Instruments','FAR','UpdateTime']
     lookoutfor:['BBH','BNS','NSBH','MassGap','Terrestrial']
@@ -475,61 +514,33 @@
         rows:5
         GridLayout:
             cols:6
-            size_hint_y:0.05
+            size_hint_y:0.07
+            padding:[5,0]
+            canvas.before:
+                Color:
+                    rgba: [0.9,0.9,0.9,1]
+                Rectangle:
+                    pos:self.pos
+                    size:self.size
             Label:
                 text:'Key:'
                 color:(0,0,0,1)
-                canvas.before:
-                    Color:
-                        rgba: [0.2,0.25,0.4,1]
-                    Rectangle:
-                        pos:self.pos
-                        size:self.size
-            Label:
-                text:root.lookoutfor[0]
-                color:(0,0,0,1)
-                canvas.before:
-                    Color:
-                        rgba: root.backcolors[0]
-                    Rectangle:
-                        size:self.size
-                        pos:self.pos
-            Label:
-                text:root.lookoutfor[1]
-                color:(0,0,0,1)
-                canvas.before:
-                    Color:
-                        rgba: root.backcolors[1]
-                    Rectangle:
-                        size:self.size
-                        pos:self.pos
-            Label:
-                text:root.lookoutfor[2]
-                color:(0,0,0,1)
-                canvas.before:
-                    Color:
-                        rgba: root.backcolors[2]
-                    Rectangle:
-                        size:self.size
-                        pos:self.pos
-            Label:
-                text:root.lookoutfor[3]
-                color:(0,0,0,1)
-                canvas.before:
-                    Color:
-                        rgba: root.backcolors[3]
-                    Rectangle:
-                        size:self.size
-                        pos:self.pos
-            Label:
-                text:root.lookoutfor[4]
-                color:(0,0,0,1)
-                canvas.before:
-                    Color:
-                        rgba: root.backcolors[4]
-                    Rectangle:
-                        size:self.size
-                        pos:self.pos
+
+            KeyLabel:
+                keytext:root.lookoutfor[0]
+                bgcol:root.backcolors[0]
+            KeyLabel:
+                keytext:root.lookoutfor[1]
+                bgcol:root.backcolors[1]
+            KeyLabel:
+                keytext:root.lookoutfor[2]
+                bgcol:root.backcolors[2]
+            KeyLabel:
+                keytext:root.lookoutfor[3]
+                bgcol:root.backcolors[3]
+            KeyLabel:
+                keytext:root.lookoutfor[4]
+                bgcol:root.backcolors[4]
         HSeparator:
             rgba:0,0,0,1
             padding:2,0
@@ -583,7 +594,7 @@
         BoxLayout:
             size_hint_y:0.08
             Button:
-                text:'back up database'
+                text:'Database Hard Backup'
                 on_press:root.stupid()
             Button:
                 text:'Main Menu'
@@ -636,20 +647,35 @@
                         size:self.size
                 canvas.after:
                     Color:
-                        rgba: 0.6,0.6,0.6,1 
+                        rgba: 0,0,0,1 
                     Line:
                         width:2
                         rectangle: self.x, self.y, self.width, self.height
                 Label:
-                    text:'Superevent Information'
+                    text:'EVENT INFORMATION'
+                    markup:True
+                    font_size:dp(16)
                     size_hint_y:0.1
+                    color:0,0,0,1
+                    canvas.before:
+                        Color:
+                            rgba: 0.95,0.95,0.95,1
+                        Rectangle:
+                            pos:self.pos
+                            size:self.size
+                Label:
+                    padding:10,0
+                    text_size:self.width,None
+                    height:self.texture_size[1]
+                    font_size:dp(16)
+                    text:'Welcome to the event information page! \n Here you can find all the interesting info for a particular gravitational wave event. \n Swipe to see where in the sky it may have come from!'
                 Button:
-                    size_hint:(1,0.8)
+                    size_hint:(1,0.1)
                     padding:10,2
                     text:'Open Glossary'
                     on_press:root.gloss_open()
                 Button:
-                    text:'Exit Info Scrn'
+                    text:'Back to Event History'
                     size_hint_y:0.1
                     on_press:root.dismiss()
             GridLayout:
@@ -661,7 +687,7 @@
                     size_hint_y:0.6
                     canvas.before:
                         Color:
-                            rgba: (0.2,0.2,0.2,1)
+                            rgba: (0,0,0,1)
                         Rectangle:
                             size:self.size
                             pos:self.pos
@@ -682,7 +708,7 @@
                     rows: len(root.part3info)
                     canvas.after:
                         Color:
-                            rgba:1,0,1,1
+                            rgba:0.2,0.25,0.4,1
                         Line:
                             width:2
                             points: [self.x+self.width+1,self.y+self.height,self.x,self.y+self.height,self.x,self.y,self.x+self.width+1,self.y]
@@ -710,48 +736,48 @@
                     size_hint:(1,0.3)
                     canvas.before:
                         Color:
-                            rgba:.2,.2,.2,1
+                            rgba:0,0,0,1
                         Rectangle:
                             pos:self.pos
                             size:self.size
                     GridLayout:
                         canvas.before:
                             Color:
-                                rgba:1,1,1,1
+                                rgba:0,0,0,1
                             Line:
                                 width:2
                                 rectangle:self.x,self.y,self.width,self.height
                         rows:2
                         Label:
                             text:root.part1info[0][3:]+' left?'
-                            font_size:14
+                            font_size:dp(14)
                             text_size:self.width,None
                             height:self.texture_size[1]
                             halign:'center'
                         Label:
                             text:root.rowdict[root.part1info[0]]
-                            font_size:20
+                            font_size:dp(20)
                     GridLayout:                                
                         canvas.before:
                             Color:
-                                rgba:1,1,1,1
+                                rgba:0,0,0,1
                             Line:
                                 width:2
                                 rectangle:self.x,self.y,self.width,self.height
                         rows:2
                         Label:
                             text:root.part1info[1][3:]+' progenitor?'
-                            font_size:14
+                            font_size:dp(14)
                             halign:'center'
                         Label:
                             text:root.rowdict[root.part1info[1]]
-                            font_size:20
+                            font_size:dp(20)
 
                 BoxLayout:
                     size_hint:(1,0.7)
                     canvas.after:
                         Color:
-                            rgba: 1,0,1,1
+                            rgba: 0.2,0.25,0.4,1
                         Line:
                             width:2
                             points:[self.x-2,self.y+self.height*0.58,self.x-2,self.y+self.height,self.x+self.width,self.y+self.height,self.x+self.width,self.y,self.x-2,self.y]
@@ -760,9 +786,9 @@
                         source:root.rowdict['GraceID']+'_pie.png'
         BoxLayout:
             Button:
-                text:'Exit \n Info Scrn'
+                text:'Back to \n Event \n History'
                 size_hint:(0.1,0.3)
-                on_press:caro.index=0;root.dismiss()
+                on_press:root.dismiss()
                 text_size:root.width,None
                 halign:'center'
                 valign:'top'
@@ -780,10 +806,19 @@
     AsyncImage:
         source:root.imsource
         size_hint_y:0.8
-    WrapLabel:
-        text:root.desc
+    ScrollView:
+        do_scroll_x:False
         size_hint_y:0.2
-        color:0,0,0,1
+        canvas.before:
+            Color:
+                rgba:95/255,95/255,169/255,1
+            Rectangle:
+                size:self.size
+                pos:self.pos
+        WrapLabel:
+            text:root.desc
+            color:1,1,1,1
+
 
 <PlotsScreen@Screen>:
     imgsources:['test','test','test','test']
@@ -817,7 +852,7 @@
         Button:
             on_press:root.manager.current='main'
             text:'main'
-            size_hint_y:0.1
+            size_hint_y:0.08
     
 <DetGrid@GridLayout>:
     current_color: (0,0,0,0)
@@ -839,17 +874,29 @@
     valign:'top'
     size_hint_y:None
     text_size: root.width, None
+    height:self.texture_size[1]
     halign: 'justify'
-    font_size:12
+    font_size:dp(12)
     line_height:1
     markup:True
+    
+<Glossary@RecycleView>
+    viewclass: 'GlossDefLabel'
+    
+    RecycleBoxLayout:
+        default_size:None,dp(56)
+        default_size_hint:1,None
+        size_hint_y:None
+        height:self.minimum_height
+        orientation:'vertical'
+        padding:[0,20]
     
 <MainButton@Button>:
 	on_press:self.nav()
 	
 <HisMainLabel@Label>:
     color:0,0,0,1
-    font_size:14
+    font_size:dp(14)
 
 <EventContainer>:
     name: None

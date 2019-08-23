@@ -31,6 +31,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition, SlideT
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.carousel import Carousel
 from kivy.uix.popup import Popup
+from kivy.uix.recycleview import RecycleView
 from kivy.uix.behaviors  import ButtonBehavior, ToggleButtonBehavior
 from kivy.animation import Animation
 from kivy.lang.builder import Builder
@@ -46,11 +47,24 @@ import datetime
 import os
 import re
 import numpy as np
+from matplotlib.image import imread
+from matplotlib.pyplot import imsave
 
-#gpioimport board
-#gpioimport neopixel
-#
-#gpiopixels = neopixel.NeoPixel(board.D18,8,auto_write=False)
+'''CHECK IF ON RASPBERRY PI FOR GPIO FUNCTIONALITY'''
+if os.uname()[4][:3] == 'arm':
+    import board
+    import neopixel
+    import RPi.GPIO as GPIO
+    buzzPin = 17
+    neoPin = board.D18
+    num_leds = 8
+    pixels = neopixel.NeoPixel(neoPin,num_leds,auto_write=False)
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(buzzPin,GPIO.OUT)
+    GPIO.output(buzzPin,GPIO.LOW)
+
+else:
+    pixels = None
 
 class Event(IsDescription):
     AlertType=StringCol(30)
@@ -98,91 +112,91 @@ class MainButton(Button):
             app.root.current='main'
         elif self.name=='plots':
             app.root.current='plots'
-class MainScreen(Screen):
-    def __init__(self,**kwargs):
-        super().__init__(**kwargs)
-        layout=GridLayout(cols=2,rows=2,padding=30,spacing=30,row_default_height=150)
-        with layout.canvas.before:
-            Color(.2,.2,.2,1)
-            self.rect=Rectangle(size=(800,600), pos=layout.pos)
-            
-        def stop(obj):
-            global main_flag
-            main_flag=1
-            App.get_running_app().stop()
-
-        self.add_widget(layout)
-        ids=('history','status','plots')
-        texts=('Event History','Detector Status','Test Plots')
-        [layout.add_widget(MainButton(text=texts[i],name=ids[i])) for i in range(0,len(ids))]
-        quitButton=Button(text='Quit')
-        quitButton.bind(on_press=stop)
-        layout.add_widget(quitButton)
-        
-        def event_waiting():
-            '''New event popup handler'''
-            global newevent_flag
-            global main_flag
-            newevent_flag=0
-            main_flag=0
-            while True:
-                while True:
-                    print("i'm waiting")    
-                    #check for the flag once per minute (same rate the file is polled)
-                    if newevent_flag == 1:
-                        newevent_flag=0
-                        #skip a level up to execute the rest of the loop, then back to waiting.
-                        print('New event has been detected!!')
-                        break
-                    if main_flag == 1:
-                        print('Event listener #2 closing...')
-                        #return takes you right out of the function
-                        return
-                    time.sleep(5)
-                
-                #Read in the new event
-                if os.path.basename(os.getcwd()) != "event_data":
-                    try:
-                        os.chdir("./event_data")
-                    except:
-                        os.mkdir("./event_data")
-                        os.chdir("./event_data")
-                while True:
-                    try:
-                        h5file = open_file("Event Database",mode="r",title="eventinfo")
-                        break
-                    except:
-                        print("file in use... trying again in 5s")
-                        time.sleep(5)
-                try:
-                    h5file.root.events
-                except NoSuchNodeError:
-                    time.sleep(5)
-                    pass      
-                
-                #parse the event data file for the most recent event to be loaded: that's the name
-                file = open("PreviousEventToRead.xml").read()
-                def search(line):
-                    result = re.search('<Param name="GraceID" dataType="string" value=(.*)ucd="meta.id">\n',
-                                       str(line))
-                    return result.group(1)
-                eventid = search(file)
-                for tab in h5file.list_nodes("/events"):
-                    if str(tab.name) in eventid:
-                        new_event_table=tab
-#                    if tab.name == eventid:
-#                        new_event_table = tab
-                namelist = new_event_table.colnames
-                new_event_row = new_event_table[-1]
-                orderedrow = []
-                for key in namelist:
-                    orderedrow.append(new_event_row[key].decode()) 
-                pop = InfoPop(title='New Event Detected!',namelist=namelist,row=orderedrow)
-                pop.open()
-                h5file.close()
-        
-        event_waiting_thread = threading.Thread(target=event_waiting)
-        event_waiting_thread.start()
+#class MainScreen(Screen):
+#    def __init__(self,**kwargs):
+#        super().__init__(**kwargs)
+#        layout=GridLayout(cols=2,rows=2,padding=30,spacing=30,row_default_height=150)
+#        with layout.canvas.before:
+#            Color(.2,.2,.2,1)
+#            self.rect=Rectangle(size=(800,600), pos=layout.pos)
+#            
+#        def stop(obj):
+#            global main_flag
+#            main_flag=1
+#            App.get_running_app().stop()
+#
+#        self.add_widget(layout)
+#        ids=('history','status','plots')
+#        texts=('Event History','Detector Status','Test Plots')
+#        [layout.add_widget(MainButton(text=texts[i],name=ids[i])) for i in range(0,len(ids))]
+#        quitButton=Button(text='Quit')
+#        quitButton.bind(on_press=stop)
+#        layout.add_widget(quitButton)
+#        
+#        def event_waiting():
+#            '''New event popup handler'''
+#            global newevent_flag
+#            global main_flag
+#            newevent_flag=0
+#            main_flag=0
+#            while True:
+#                while True:
+#                    print("i'm waiting")    
+#                    #check for the flag once per minute (same rate the file is polled)
+#                    if newevent_flag == 1:
+#                        newevent_flag=0
+#                        #skip a level up to execute the rest of the loop, then back to waiting.
+#                        print('New event has been detected!!')
+#                        break
+#                    if main_flag == 1:
+#                        print('Event listener #2 closing...')
+#                        #return takes you right out of the function
+#                        return
+#                    time.sleep(5)
+#                
+#                #Read in the new event
+#                if os.path.basename(os.getcwd()) != "event_data":
+#                    try:
+#                        os.chdir("./event_data")
+#                    except:
+#                        os.mkdir("./event_data")
+#                        os.chdir("./event_data")
+#                while True:
+#                    try:
+#                        h5file = open_file("Event Database",mode="r",title="eventinfo")
+#                        break
+#                    except:
+#                        print("file in use... trying again in 5s")
+#                        time.sleep(5)
+#                try:
+#                    h5file.root.events
+#                except NoSuchNodeError:
+#                    time.sleep(5)
+#                    pass      
+#                
+#                #parse the event data file for the most recent event to be loaded: that's the name
+#                file = open("PreviousEventToRead.xml").read()
+#                def search(line):
+#                    result = re.search('<Param name="GraceID" dataType="string" value=(.*)ucd="meta.id">\n',
+#                                       str(line))
+#                    return result.group(1)
+#                eventid = search(file)
+#                for tab in h5file.list_nodes("/events"):
+#                    if str(tab.name) in eventid:
+#                        new_event_table=tab
+##                    if tab.name == eventid:
+##                        new_event_table = tab
+#                namelist = new_event_table.colnames
+#                new_event_row = new_event_table[-1]
+#                orderedrow = []
+#                for key in namelist:
+#                    orderedrow.append(new_event_row[key].decode()) 
+#                pop = InfoPop(title='New Event Detected!',namelist=namelist,row=orderedrow)
+#                pop.open()
+#                h5file.close()
+#        
+#        event_waiting_thread = threading.Thread(target=event_waiting)
+#        event_waiting_thread.start()
         
 class HisColLabel(ToggleButtonBehavior,Label):
     sorttype=ObjectProperty()
@@ -376,10 +390,10 @@ class HistoryScreenv2(Screen):
         
         for child in self.ids.HisCols.children:
             child.names = names
-        t2 = threading.Thread(target=historyUpdatev2,args=(self.ids.rv,names,specialnames,lookoutfor,backcolors),daemon=True)
+        t2 = threading.Thread(target=historyUpdatev2,args=(self.ids.rv,names,specialnames,lookoutfor,backcolors,'Time Descending',True),daemon=True)
         t2.start()
         
-def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending'):
+def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending',led_init = False):
     print('begin hist update')
     '''An important function that is responsible for populating and repopulating the history screen.'''
     global flag
@@ -451,19 +465,19 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             if sort_vars != []:
                 if 'Descending' in sorttype:
                     try:
-                        tables = [x for _,x in sorted(zip(sort_vars,tables),key=len[0])]
+                        tables = [x for _,x in reversed(sorted(zip(sort_vars,tables)),key=len[0])]
                     except TypeError:
                         tables2=[]
-                        sort_indexes = np.argsort(np.array(sort_vars))
+                        sort_indexes = reversed(np.argsort(np.array(sort_vars)))
                         for index in sort_indexes:
                             tables2.append(tables[index])
                         tables=tables2
                 elif 'Ascending' in sorttype:
                     try:
-                        tables = [x for _,x in reversed(sorted(zip(sort_vars,tables)))]
+                        tables = [x for _,x in (sorted(zip(sort_vars,tables)))]
                     except TypeError:
                         tables2=[]
-                        sort_indexes = reversed(np.argsort(np.array(sort_vars)))
+                        sort_indexes = (np.argsort(np.array(sort_vars)))
                         for index in sort_indexes:
                             tables2.append(tables[index])
                         tables=tables2
@@ -497,14 +511,20 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                 to_add_to_data['bgcol'] = backcolors[np.argmax(stats)]
                 new_data.append(to_add_to_data)
                 
+                if i == 0:
+                    winner = lookoutfor[np.argmax(stats)]
+                
             rv.data = new_data
             
             print('Event History Updated...')
+            
+            if pixels:
+                notifier(winner)
             h5file.close()
             #reset the flag
             first = 0
 
-        waittime = 10   
+        waittime = 5   
         i=0
         while i < waittime:
             if flag ==1:
@@ -529,22 +549,6 @@ class InfoPop(Popup):
     namelist=ObjectProperty()
     row=ObjectProperty()
     def gloss_open(self):
-        content = GridLayout(rows=2)
-        content.add_widget(Glossary(size_hint_y=0.9))
-        but = Button(text='Done',size_hint_y=0.1)
-        content.add_widget(but)
-        pop = Popup(title='Glossary',content=content,size_hint=(0.25,1),pos_hint={'x':0,'y':0})
-        but.bind(on_press=pop.dismiss)
-        pop.open()
-        
-class GlossDefLabel(Label):
-    nom=ObjectProperty()
-    desc=ObjectProperty()
-    
-
-class Glossary(ScrollView):
-    def __init__(self,**kwargs):
-        super().__init__(**kwargs)
         descdict = {'GraceID': 'Identifier in GraceDB', 'AlertType': 'VOEvent alert type', 
             'Instruments': 'List of instruments used in analysis to identify this event', 
             'FAR': 'False alarm rate for GW candidates with this strength or greater', 
@@ -560,22 +564,51 @@ class Glossary(ScrollView):
             'UpdateTime': "The date & time of the most recent update to this event's parameters",
             'MassGap':"Compact binary systems with at least one compact object whose mass is in the hypothetical 'mass gap' between neutron stars and black holes, defined here as 3-5 solar masses.",
             'Revision':"The number of revisions (updates) made to this event's parameters"}
-        descripts=[]
-        names = []
-        for key,value in descdict.items():
-            names.append(key)
-            descripts.append(value)
-        namelist = sorted(names)
-        descs=[x for _,x in sorted(zip(names,descripts))]
-        layout2 = GridLayout(rows=len(descs),size_hint_y=None)
-        for i in range(len(namelist)):
-            gloss = GlossDefLabel(nom=namelist[i],desc=descs[i])
-            layout2.add_widget(gloss)
-        self.add_widget(layout2)
-        self.do_scroll_x=False
-        self.do_scroll_y=True
-        layout2.height=sum([c.height for c in layout2.children])+20
+        content = GridLayout(rows=2)
+        _glossary = Glossary(size_hint_y=0.9)
+        descdata=[]
+        sortedkeys=[]
+        for key in descdict:
+            sortedkeys.append(key)
+        for key in sortedkeys:
+            descdata.append({'nom':key,'desc':descdict[key]})
+        _glossary.data = descdata
+        content.add_widget(_glossary)
+        but = Button(text='Done',size_hint_y=0.1)
+        content.add_widget(but)
+        pop = Popup(title='Glossary',content=content,size_hint=(0.25,1),pos_hint={'x':0,'y':0})
+        but.bind(on_press=pop.dismiss)
+        pop.open()
         
+    def on_dismiss(self):
+        Clock.schedule_once(lambda dt: self.fin_dismiss(),0.1)
+    def fin_dismiss(self):
+            self.ids.caro.index=0
+        
+class GlossDefLabel(Label):
+    nom=ObjectProperty()
+    desc=ObjectProperty()
+
+class Glossary(RecycleView):
+    pass
+#
+#class Glossary(ScrollView):
+#    def __init__(self,**kwargs):
+#        super().__init__(**kwargs)
+#        descripts=[]
+#        names = []
+#
+#        namelist = sorted(names)
+#        descs=[x for _,x in sorted(zip(names,descripts))]
+#        layout2 = GridLayout(rows=len(descs),size_hint_y=None)
+#        for i in range(len(namelist)):
+#            gloss = GlossDefLabel(nom=namelist[i],desc=descs[i])
+#            layout2.add_widget(gloss)
+#        self.add_widget(layout2)
+#        self.do_scroll_x=False
+#        self.do_scroll_y=True
+#        layout2.height=sum([c.height for c in layout2.children])+20
+#        
         
 class EventContainer(ButtonBehavior,GridLayout):
     name=ObjectProperty()
@@ -789,21 +822,22 @@ def statusupdate(obj):
         for i,elem in enumerate(data):
             setattr(obj,'det'+str(i+1)+'props',elem)
         
-        '''LED CONTROL (replace #gpio with "" to use)'''
-        #gpiofor i,stat in enumerate(stats):
-            #gpioif stat == 0:
-                #red
-                #gpiopixels[i] = (255,0,0)
-            #gpioif stat == 1:
-                #orange
-                #gpiopixels[i] = (228,119,10) 
-            #gpioif stat == 2:
-                #green
-                #gpiopixels[i] = (17,221,17)
-            #gpioif stat == 3:
-                #yellow
-                #gpiopixels[i] = (0,0,0)
-        #gpiopixels.show()
+        '''LED CONTROL'''
+        if pixels:
+            for i,stat in enumerate(stats):
+                if stat == 0:
+                    #red
+                    pixels[i] = (255,0,0)
+                if stat == 1:
+                    #orange
+                    pixels[i] = (228,119,10) 
+                if stat == 2:
+                    #green
+                    pixels[i] = (17,221,17)
+                if stat == 3:
+                    #yellow
+                    pixels[i] = (0,0,0)
+            pixels.show()
         
         waittime = 30
         i = 0
@@ -831,22 +865,25 @@ def plotupdate(obj):
         url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
         url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
         #grab the soup and parse for links + descripts
+        date = datetime.datetime.today()
         try:
-            date = datetime.datetime.today()
             sort_date = [str(date.year),str(date.month).zfill(2),str(date.day).zfill(2)]
             datestring = sort_date[0]+sort_date[1]+sort_date[2]
             url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
             url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
             resp=requests.get(url)
             r = resp.text
-            if 'Not Found' in str(r):
-                date = datetime.datetime.today() - datetime.timedelta(days=1)
-                sort_date = [str(date.year),str(date.month).zfill(2),str(date.day).zfill(2)]
-                datestring = sort_date[0]+sort_date[1]+sort_date[2]
-                url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
-                url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
-                resp=requests.get(url)
-                r = resp.text
+            while True:
+                if 'Not Found' in str(r):
+                    date = date - datetime.timedelta(days=1)
+                    sort_date = [str(date.year),str(date.month).zfill(2),str(date.day).zfill(2)]
+                    datestring = sort_date[0]+sort_date[1]+sort_date[2]
+                    url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
+                    url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
+                    resp=requests.get(url)
+                    r = resp.text
+                else:
+                    break
             soup=BeautifulSoup(r,"lxml")
             resp2 = requests.get(url2)
             r2 = resp2.text
@@ -873,6 +910,10 @@ def plotupdate(obj):
                 source= 'https://www.gw-openscience.org'+str(link.get("href"))
                 os.system("curl -0 "+ source+ ' > ' + filepath)
                 paths.append(filepath)
+                
+                img = imread("./Detector_Plot_3.png")
+                cropimg = img[50:550,100:1200,:]
+                imsave("./Detector_Plot_3.png",cropimg,format='png')
                 i+=1
                 break
 
@@ -887,6 +928,20 @@ def plotupdate(obj):
             i+=5
             time.sleep(5)
 
+            
+def notifier(event_type):
+    if event_type == 'Terrestrial':
+        pixels[1] = (242,179,179)
+    elif event_type == 'NSBH':
+        pixels[1] = (238,242,179)
+    elif event_type == 'BBH':
+        pixels[1] = (202,214,235)
+    elif event_type == 'MassGap':
+        pixels[1] = (231,179,242)
+    elif event_type == 'BNS':
+        pixels[1] = (179,242,183)
+    pixels.show()
+
 class MainScreenv2(Screen):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
@@ -897,12 +952,38 @@ class MainScreenv2(Screen):
             global main_flag
             newevent_flag=0
             main_flag=0
+            
+            def buzz(times):
+                i=0
+                while i < times:
+                    GPIO.output(buzzPin,GPIO.HIGH)
+                    time.sleep(0.1)
+                    GPIO.output(buzzPin,GPIO.LOW)
+                    time.sleep(0.05)
+                    GPIO.output(buzzPin,GPIO.HIGH)
+                    time.sleep(0.1)
+                    GPIO.output(buzzPin,GPIO.LOW)
+                    time.sleep(0.05)
+                    GPIO.output(buzzPin,GPIO.HIGH)
+                    time.sleep(0.1)
+                    GPIO.output(buzzPin,GPIO.LOW)
+                    time.sleep(0.05)
+                    GPIO.output(buzzPin,GPIO.HIGH)
+                    time.sleep(0.1)
+                    GPIO.output(buzzPin,GPIO.LOW)
+                    time.sleep(0.05)   
+            
+                    i+=1
+            
             while True:
                 while True:
                     #check for the flag once per minute (same rate the file is polled)
                     if newevent_flag == 1:
                         newevent_flag=0
                         #skip a level up to execute the rest of the loop, then back to waiting.
+                        if buzzPin:
+                            buzzthread = threading.Thread(target=buzz,args=(3,))
+                            buzzthread.start()
                         print('New event has been detected!!')
                         break
                     if main_flag == 1:
@@ -947,7 +1028,16 @@ class MainScreenv2(Screen):
                 new_event_row = new_event_table[-1]
                 orderedrow = []
                 for key in namelist:
-                    orderedrow.append(new_event_row[key].decode()) 
+                    orderedrow.append(new_event_row[key].decode())
+                    
+                if pixels:
+                    stats = []
+                    lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
+                    for name in lookoutfor:
+                        stats.append(float(new_event_row[name].decode().strip('%')))
+                    winner = lookoutfor[np.argmax(stats)]
+                    notifier(winner)
+                
                 pop = InfoPop(title='New Event Detected!',namelist=namelist,row=orderedrow)
                 pop.open()
                 h5file.close()
@@ -972,11 +1062,11 @@ class StatusScreenv2(Screen):
     bios=ListProperty()
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-        self.bios=(['LIGO Livingston was one of two trailblazing gravitational wave detectors (the other being LIGO Hanford). The observatory uses ultra-high-vacuum technology to achieve extremely precise measurement capability. \n Forming a pair seperated by over 3000km, LIGO Hanford and Livingston observed gravitational waves for the first time in history in February, 2016.',
-                       'LIGO Hanford was one of two trailblazing gravitational wave detectors (the other being LIGO Livingston). The observatory uses ultra-high-vacuum technology to achieve extremely precise measurement capability. \n Forming a pair seperated by over 3000km, LIGO Hanford and Livingston observed gravitational waves for the first time in history in February, 2016.',
+        self.bios=(['LIGO Livingston is one of two trailblazing gravitational wave detectors (the other being LIGO Hanford). The observatory uses ultra-high-vacuum technology to achieve extremely precise measurement capability. \n Forming a pair seperated by over 3000km, LIGO Hanford and Livingston observed gravitational waves for the first time in history in February, 2016.',
+                       'LIGO Hanford is one of two trailblazing gravitational wave detectors (the other being LIGO Livingston). The observatory uses ultra-high-vacuum technology to achieve extremely precise measurement capability. \n Forming a pair seperated by over 3000km, LIGO Hanford and Livingston observed gravitational waves for the first time in history in February, 2016.',
+                       'GEO600 is a gravitational wave detector located in Hanover, Germany. Although smaller than other counterparts worldwide, the detector is still capable of extremely precise measurement, only a few orders of magnitude less sensitive than significantly larger detectors. It has been a vital proof of concept for many advanced technologies and features that will surely be seen in future gravitational wave observatories. ',
                        "The Virgo interferometer is Europe's largest to date. Currently, Virgo is being modified and improved to its next stage, 'Advanced Virgo', which aims to improve sensitivity by a factor of 10 by installing new adaptive-optic mirror systems and additional cryotraps to prevent the entry of residual particles. \n Virgo made its first GW detection, alongside LIGO, in August 2017 - the merger of two neutron stars.", 
-                       'GEO600 is a detector located in Hanover, Germany. Although smaller than other counterparts worldwide, the detector is still capable of extremely precise measurement, only a few orders of magnitude less sensitive than significantly larger detectors. It has been a vital proof of concept for many advanced technologies and features that will surely be seen in future gravitational wave observatories. ',
-                       "The Kamioka Gravitational Wave Detector (KAGRA) is the world's first underground gravitational wave observatory currently under construction in the Kamioka mine, Japan, with the University of Tokyo. \n The detector will utilise cryogenic cooling to reduce the interference of thermal noise in the measuring process. It will be completed towards the end of 2019."])
+                       "The Kamioka Gravitational Wave Detector (KAGRA) will be the world's first underground gravitational wave observatory. It is currently under construction in the Kamioka mine, Japan, with the University of Tokyo. \n The detector will utilise cryogenic cooling to reduce the interference of thermal noise in the measuring process. It will be completed towards the end of 2019."])
         t = threading.Thread(target=statusupdate,args=(self,),daemon=True)
         t.start()
   

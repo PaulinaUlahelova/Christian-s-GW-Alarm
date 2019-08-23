@@ -45,16 +45,16 @@ def statusdetect():
     for i,row in enumerate(detrows):
         if statuses[i] == 0:
             #red 
-            toput = [1,0,0,1]
+            toput = [236/255,23/255,23/255,0.7]
         elif statuses[i] == 1:
             #orange
-            toput=[228/255,119/255,10/255,1]
+            toput=[228/255,119/255,10/255,0.7]
         elif statuses[i] == 2:
              #green
-             toput=[0,1,0,1]
+             toput=[132/255,241/255,70/255,0.7]
         elif statuses[i] == 3:
             #yellow
-            toput=[1,1,0,1]
+            toput=[229/255,237/255,78/255,0.7]
         temp=[row[0],row[2],row[3],toput]
         export.append(temp)
     export[0],export[2] = export[2],export[0]
