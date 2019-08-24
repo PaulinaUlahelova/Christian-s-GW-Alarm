@@ -357,27 +357,9 @@ class HistoryScreenv2(Screen):
                 break
         
         def receive():
-                #host="209.208.78.170"  
                 gcn.listen(host="209.208.78.170",handler=process_gcn)
-        t4 = threading.Thread(target=receive,daemon=True)
+        t4 = threading.Thread(target=receive,daemon=True,name='gcnthread')
         t4.start()
-        
-        def refresh_all(arg):
-            global main_flag
-            main_flag = 1
-            App.get_running_app().stop()
-            App.get_running_app().root_window.close()
-            print('shutdown')
-            #time.sleep(5)
-            sync_database()
-            #Wait for it to finish....
-            print('done - restart away')
-            
-        def stupid(obj):
-            content = Button(text='Ok')
-            content.bind(on_press=refresh_all)
-            confirm = Popup(title='Are you sure?',content=content,size_hint=(0.4,0.4))
-            confirm.open()
             
         names = tables.colnames
 #        num_events = len(h5file.list_nodes(where="/events",classname="Table"))
@@ -392,6 +374,27 @@ class HistoryScreenv2(Screen):
             child.names = names
         t2 = threading.Thread(target=historyUpdatev2,args=(self.ids.rv,names,specialnames,lookoutfor,backcolors,'Time Descending',True),daemon=True)
         t2.start()
+        
+    def stupid(obj):
+        def refresh_all(arg):
+            global main_flag
+            main_flag = 1
+            
+            #stop all threads
+            for t in threading.enumerate():
+                print(t.name)
+                
+            App.get_running_app().stop()
+            App.get_running_app().root_window.close()
+            print('shutdown')
+            #time.sleep(5)
+            sync_database()
+            #Wait for it to finish....
+            print('done - restart away')
+        content = Button(text='Ok')
+        content.bind(on_press=refresh_all)
+        confirm = Popup(title='Are you sure?',content=content,size_hint=(0.4,0.4))
+        confirm.open()
         
 def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending',led_init = False):
     print('begin hist update')
@@ -880,10 +883,26 @@ def plotupdate(obj):
                     datestring = sort_date[0]+sort_date[1]+sort_date[2]
                     url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
                     url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
-                    resp=requests.get(url)
-                    r = resp.text
-                else:
+                    
+
+                '''check the first link to make sure it actually loads - problem occurs at midnight GMT'''
+                resp=requests.get(url)
+                r = resp.text
+                soup=BeautifulSoup(r,"lxml")
+                
+                try:
+                    for link in soup.find_all("a"):
+                        linkstr = str(link.get("href"))
+                        if 'png' in linkstr:
+                            filepath = 'Detector_Plot_0.png'                
+                            source='https://www.gw-openscience.org'+linkstr
+                            os.system("curl -0 "+ source+ ' > ' + filepath)
+                            img = imread("./"+filepath)
+                            break
                     break
+                except:
+                    r+='Not Found'
+                    continue
             soup=BeautifulSoup(r,"lxml")
             resp2 = requests.get(url2)
             r2 = resp2.text
@@ -911,7 +930,7 @@ def plotupdate(obj):
                 os.system("curl -0 "+ source+ ' > ' + filepath)
                 paths.append(filepath)
                 
-                img = imread("./Detector_Plot_3.png")
+                img = imread("./"+filepath)
                 cropimg = img[50:550,100:1200,:]
                 imsave("./Detector_Plot_3.png",cropimg,format='png')
                 i+=1

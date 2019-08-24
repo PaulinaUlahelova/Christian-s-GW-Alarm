@@ -24,7 +24,7 @@
     texty:'n'
     rows:4
     on_press:self.parent.parent.parent.manager.current=self.name
-    canvas.before:
+    canvas.after:
         Color:
             rgba: 0,0,0,1
         Line:
@@ -38,6 +38,7 @@
         halign:'left'
         font_size:dp(22)
         size_hint_y:0.2
+        markup:True
     HSeparator:
         rgba: 0,0,0,1
     Label:
@@ -56,22 +57,41 @@
             source:root.imgsource
             allow_stretch:True
             keep_ratio:False
-
-<AboutPop>:
-    title:'About the GWAlarm project'
+            
+<DevPop@Popup>:
     size_hint:0.4,0.4
-    quit:None
-    GridLayout:
-        rows:2
-        Label:
-            text:'GWalarm info here'
-        Button:
-            text:'quit app'
-            on_press:root.stop()
+    Label:
+        text:'To be replaced...'
+    
+<DeveloperAboutButton@ButtonBehavior+BoxLayout>:
+    img1:'./IGR.jpg'
+    img2:'./UofG.jpg'
+    labtext:'About the Developers'
+    on_press:Factory.DevPop().open()
+    padding:0,2
+    
+    canvas.before:
+        Color:
+            rgba: 0,0,0,1
+        Line:
+            width:1
+            rectangle: self.x, self.y, self.width, self.height
+    
+    Image:
+        source:root.img2
+        size_hint_x:0.35
+    Label:
+        text:root.labtext
+        font_size:dp(20)
+        color:0,0,0,1
+        size_hint_x:0.5
+    Image:
+        source:root.img1
+        size_hint_x:0.15
 
 <MainScreenv2@Screen>:
     GridLayout:
-        rows:2
+        rows:3
         GridLayout:
             canvas.before:
                 Color:
@@ -79,30 +99,24 @@
                 Rectangle:
                     pos:self.pos
                     size:self.size
-            rows:2
-            size_hint_y:0.4
+            rows:3
+            size_hint_y:0.25
             BoxLayout:
-                padding:[3,3]
-                Image:
-                    source:'./UofG.jpg'
-                    size_hint_x:0.3
+                padding:[0,30,0,0]
                 Label:
-                    size_hint_x:0.6
-                Button:
-                    text:'About'
-                    on_press:Factory.AboutPop().open()
-                    size_hint_x:0.15
-            BoxLayout:
-                padding:[3,3]
-                Image:
-                    source:'./IGR.jpg'
-                    size_hint_x:0.1
-                Label:
-                    text:'Gravitational Wave Alarm'
-                    font_size:dp(36)
+                    text:'Gravitational Wave Alarm.'
+                    font_size:dp(52)
                     size_hint_x:0.8
                 Label:
                     size_hint_x:0.1
+            BoxLayout:
+                padding:[30,0,0,0]
+                Label:
+                    size_hint_x:0.8
+                    text:"A real-time link with the world's gravitational wave observing network."
+                    font_size:dp(20)
+            Label:
+                size_hint_y:0.1
         GridLayout:
             canvas.before:
                 Color:
@@ -110,25 +124,63 @@
                 Rectangle:
                     pos:self.pos
                     size:self.size
-            cols:3
+            cols:2
             size_hint_y:0.6
-            padding:20,20
-            LabButton:
-                name:'plots'
-                titletext:'Plots'
-                texty:'View detector noise curves, maximum event detection ranges and more'
-                imgsource:'./event_data/KAGRA.jpg'
+            padding:20,5,20,0
+            
+#            LabButton:
+#                name:'plots'
+#                titletext:'Plots'
+#                texty:'View detector noise curves, maximum event detection ranges and more'
+#                imgsource:'./event_data/KAGRA.jpg'
+
             LabButton:
                 name:'history'
-                titletext:'Event History'
-                texty:'Browse detailed profiles on all events detected so far in Observing Run 3'
+                titletext:'[b] Event History [/b]'
+                texty:'Browse detailed profiles on all events detected so far in Observing Run 3 (O3)'
                 imgsource:'./event_data/LIGO Hanford.jpg'
             LabButton:
                 name:'status'
-                titletext:'Detector Status'
+                titletext:'[b] Detector Status [/b]'
                 texty:"Monitor the activities of the world's largest GW observatories"
                 imgsource:'./event_data/LIGO Livingston.jpg'
+                
+        BoxLayout:
+            padding:20,5,20,5
+            canvas.before:
+                Color:
+                    rgba: .9,.9,.9,1
+                Rectangle:
+                    pos:self.pos
+                    size:self.size
 
+            size_hint_y:0.15
+            Label:
+                size_hint_x:0.3
+                canvas.after:
+                    Color:
+                        rgba: 0,0,0,1
+                    Line:
+                        width:2
+                        points: self.x, self.y+self.height+5, self.x+self.width, self.y+self.height+5
+                    
+            DeveloperAboutButton:
+                canvas.after:
+                    Color:
+                        rgba: 0,0,0,1
+                    Line:
+                        width:2
+                        points: self.x, self.y+self.height+5, self.x+self.width, self.y+self.height+5
+            Label:
+                size_hint_x:0.3
+                canvas.after:
+                    Color:
+                        rgba: 0,0,0,1
+                    Line:
+                        width:2
+                        points: self.x, self.y+self.height+5, self.x+self.width, self.y+self.height+5
+
+            
 <WrapLabel@Label>:
     text_size: self.width,None
     size_hint_y:None
@@ -210,7 +262,8 @@
                         rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
                     prop:root.det1props
-                    text:self.prop[0]
+                    text:'[b]'+self.prop[0]+'[/b]'
+                    markup:True
                     bio:root.bios[0]
                     on_press:root.retract(self)
                     valign:'top'
@@ -237,7 +290,8 @@
                         rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
                     prop:root.det2props
-                    text:self.prop[0]
+                    text:'[b]'+self.prop[0]+'[/b]'
+                    markup:True
                     bio:root.bios[1]
                     on_press:root.retract(self)
                     valign:'top'
@@ -308,6 +362,13 @@
                     allow_stretch:True
             BoxLayout:
                 size_hint_x:0.13
+                Button:
+                    on_press:root.manager.current='plots'
+                    text:'Advanced \n Info'
+                    text_size:root.width,None
+                    halign:'center'
+                    valign:'top'
+                    size_hint:0.2,0.15
         BoxLayout:
             size_hint_y:0.1
             BoxLayout:
@@ -319,7 +380,8 @@
                         rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
                     prop:root.det3props
-                    text:self.prop[0]
+                    text:'[b]' + self.prop[0] + '[/b]'
+                    markup:True
                     bio:root.bios[2]
                     on_press:root.retract(self)
                     valign:'bottom'
@@ -345,7 +407,8 @@
                         rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
                     prop:root.det4props
-                    text:self.prop[0]
+                    text:'[b]'+self.prop[0] + '[/b]'
+                    markup:True
                     bio:root.bios[3]
                     on_press:root.retract(self)
                 DetectLabel:
@@ -370,7 +433,8 @@
                         rectangle:self.x,self.y,self.width,self.height
                 DetectLabel:
                     prop:root.det5props
-                    text:self.prop[0]
+                    text:'[b]'+self.prop[0]+'[/b]'
+                    markup:True
                     bio:root.bios[4]
                     on_press:root.retract(self)
                     valign:'bottom'
@@ -513,6 +577,7 @@
     GridLayout:
         rows:5
         GridLayout:
+            id:grid
             cols:6
             size_hint_y:0.07
             padding:[5,0]
@@ -523,8 +588,15 @@
                     pos:self.pos
                     size:self.size
             Label:
-                text:'Key:'
+                text:'[b] Key: [/b]'
+                markup:True
                 color:(0,0,0,1)
+                canvas.before:
+                    Color:
+                        rgba: [0.85,0.85,0.85,1]
+                    Rectangle:
+                        pos:grid.pos
+                        size:self.size[0],self.size[1]*1.1
 
             KeyLabel:
                 keytext:root.lookoutfor[0]
@@ -550,7 +622,6 @@
             size_hint_y:0.08
             HisColLabel:
                 text:root.specialnames[0]
-                color:(0,0,0,1)
                 sorttype:root.specialnames[0]
                 names:root.names
                 specialnames:root.specialnames
@@ -558,7 +629,6 @@
                 backcolors:root.backcolors
             HisColLabel:
                 text:root.specialnames[1]
-                color:(0,0,0,1)
                 sorttype:root.specialnames[1]
                 names:root.names
                 specialnames:root.specialnames
@@ -566,7 +636,6 @@
                 backcolors:root.backcolors
             HisColLabel:
                 text:root.specialnames[2]
-                color:(0,0,0,1)
                 sorttype:root.specialnames[2]
                 names:root.names
                 specialnames:root.specialnames
@@ -574,7 +643,6 @@
                 backcolors:root.backcolors
             HisColLabel:
                 text:root.specialnames[3]
-                color:(0,0,0,1)
                 sorttype:root.specialnames[3]
                 names:root.names
                 specialnames:root.specialnames
@@ -582,7 +650,6 @@
                 backcolors:root.backcolors
             HisColLabel:
                 text:root.specialnames[4]
-                color:(0,0,0,1)
                 sorttype:root.specialnames[4]
                 names:root.names
                 specialnames:root.specialnames
@@ -850,8 +917,8 @@
                 desc:root.descs[3]
             
         Button:
-            on_press:root.manager.current='main'
-            text:'main'
+            on_press:root.manager.current='status'
+            text:'Back to the Detector Portal'
             size_hint_y:0.08
     
 <DetGrid@GridLayout>:

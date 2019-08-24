@@ -109,6 +109,10 @@ def process_gcn(payload, root):
     imgfile = imglinks[-1]
     imgfilepath = "https://gracedb.ligo.org"+imgfile
     os.system("curl -0 "+imgfilepath + '> ' + './'+skymap)
+    
+    '''Skymap img resizing (done by trial and error beforehand)'''
+    img = plt.imread(skymap)
+    plt.imsave(skymap,img[100:475,50:750,:])
 
     #os.system("curl -0 "+filepath + '> ' + fitspath)
     #os.system("ligo-skymap-plot map_to_convert.fits.gz"+" -o "+skymap+" --annotate --contour 50 90 --geo")
