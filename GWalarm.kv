@@ -198,9 +198,10 @@
     imgsource:'./event_data/neutral.png'
     sorttype:
     newsort:
+    current_color:0.2,0.25,0.4,1
     canvas.before:
         Color:
-            rgba: 0.2,0.25,0.4,1
+            rgba: self.current_color
         Rectangle:
             size:self.size
             pos:self.pos    
@@ -213,7 +214,7 @@
     canvas.after:
         Rectangle:
             pos:self.pos[0]+self.width*0.87,self.pos[1]+self.height*0.25
-            size:self.width*0.13,self.height*0.5
+            size:self.width*0.1,self.height*0.5
             source:root.imgsource
     text_size: root.width, None
     size:self.texture_size
@@ -274,7 +275,6 @@
                     on_press:root.retract(self)
                     valign:'top'
                     text_size:self.width,None
-                    
                 DetectLabel:
                     prop:root.det1props
                     text:self.prop[2]
@@ -338,7 +338,7 @@
             cols:3
             BoxLayout:
                 size_hint_x:0.13
-                Button:
+                HisScreenButton:
                     on_press:root.manager.current='main'
                     text:'Main Menu'
                     size_hint:0.2,0.15
@@ -362,7 +362,7 @@
                     allow_stretch:True
             BoxLayout:
                 size_hint_x:0.13
-                Button:
+                HisScreenButton:
                     on_press:root.manager.current='plots'
                     text:'Advanced \n Info'
                     text_size:root.width,None
@@ -460,6 +460,7 @@
     line_height:1.2
     markup:True
     color:0,0,0,1
+    
 <StatBio@Screen>:
     detlist:['test','test','test',[1,1,1,1]]
     bio: 'torep'
@@ -511,16 +512,6 @@
             size_hint_x:0.4
             source:root.detlist[0]+'.jpg'
 
-
-    
-<HistoryScreen@Screen>:
-    canvas:
-        Color:
-            rgba: 1,1,1,1
-        Rectangle:
-            size:self.size
-            pos:self.pos    
-
 <RV@RecycleView>:
     id:rv
     viewclass:'EventContainer'
@@ -563,6 +554,20 @@
         color:0,0,0,1
         font_size:dp(12)
         
+<HisScreenButton@ButtonBehavior+Label>:
+    always_release:True
+    col:0.2,0.25,0.4,1
+    canvas.before:
+        Color:
+            rgba: self.col
+        Rectangle:
+            pos:self.pos
+            size:self.size
+    color:1,1,1,1
+    
+    on_press:self.col=0.2,0.25,0.6,1
+    on_release:self.col=0.2,0.25,0.4,1
+
 <HistoryScreenv2>:
     specialnames:['GraceID','Distance','Instruments','FAR','UpdateTime']
     lookoutfor:['BBH','BNS','NSBH','MassGap','Terrestrial']
@@ -659,11 +664,18 @@
             id:rv
             size_hint:1,0.79
         BoxLayout:
+            padding:0,2,0,0
             size_hint_y:0.08
-            Button:
+            canvas:
+                Color:
+                    rgba: 0.6,0.6,0.6,1
+                Line:
+                    width: 2
+                    points: [self.x, self.y+self.height, self.x+self.width,self.y+self.height]
+            HisScreenButton:
                 text:'Database Hard Backup'
                 on_press:root.stupid()
-            Button:
+            HisScreenButton:
                 text:'Main Menu'
                 on_press:root.manager.current = 'main'
                     
@@ -882,6 +894,12 @@
             Rectangle:
                 size:self.size
                 pos:self.pos
+        canvas:
+            Color:
+                rgba: 0,0,0,1
+            Line:
+                width:2
+                rectangle:self.x,self.y,self.width,self.height
         WrapLabel:
             text:root.desc
             color:1,1,1,1
@@ -957,9 +975,6 @@
         height:self.minimum_height
         orientation:'vertical'
         padding:[0,20]
-    
-<MainButton@Button>:
-	on_press:self.nav()
 	
 <HisMainLabel@Label>:
     color:0,0,0,1
