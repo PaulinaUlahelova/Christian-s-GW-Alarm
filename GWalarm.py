@@ -55,7 +55,7 @@ from matplotlib.pyplot import imsave
 if os.uname()[4][:3] == 'arm':
 
     import RPi.GPIO as GPIO
-    buzzPin = 5
+    buzzPin=5
     testPin=6
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(buzzPin,GPIO.OUT)
@@ -75,6 +75,7 @@ if os.uname()[4][:3] == 'arm':
         print('Hardware has been detected. Enabling...')
         
     else:
+        GPIO.output(buzzPin,GPIO.LOW)
         print('No hardware detected.')
         GPIO.cleanup()
         pixels = None
