@@ -33,6 +33,7 @@ from kivy.uix.carousel import Carousel
 from kivy.uix.popup import Popup
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.behaviors  import ButtonBehavior, ToggleButtonBehavior
+from kivy.uix.modalview import ModalView
 from kivy.animation import Animation
 from kivy.lang.builder import Builder
 
@@ -52,20 +53,40 @@ from matplotlib.pyplot import imsave
 
 '''CHECK IF ON RASPBERRY PI FOR GPIO FUNCTIONALITY'''
 if os.uname()[4][:3] == 'arm':
-    import board
-    import neopixel
+
     import RPi.GPIO as GPIO
-    buzzPin = 17
-    neoPin = board.D18
-    num_leds = 8
-    pixels = neopixel.NeoPixel(neoPin,num_leds,auto_write=False)
+    buzzPin = 5
+    testPin=6
     GPIO.setmode(GPIO.BCM)
     GPIO.setup(buzzPin,GPIO.OUT)
+    GPIO.setup(testPin,GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
     GPIO.output(buzzPin,GPIO.LOW)
-
+    
+    '''test if hardware is present'''
+    GPIO.output(buzzPin,GPIO.HIGH)
+    time.sleep(0.01)
+    if GPIO.input(testPin):
+        GPIO.output(buzzPin,GPIO.LOW)
+        import board
+        import neopixel
+        neoPin = board.D12
+        num_leds = 8
+        pixels = neopixel.NeoPixel(neoPin,num_leds,auto_write=False)
+        print('Hardware has been detected. Enabling...')
+        
+    else:
+        print('No hardware detected.')
+        GPIO.cleanup()
+        pixels = None
+        buzzPin= None
 else:
+    print('No hardware detected.')
     pixels = None
     buzzPin= None
+
+'''are we in the right folder? Preserves img functionality'''
+if os.path.basename(os.getcwd()) == 'event_data':
+    os.chdir('..')
 
 class Event(IsDescription):
     AlertType=StringCol(30)
@@ -108,7 +129,6 @@ class HisColLabel(ToggleButtonBehavior,Label):
     imgsource=ObjectProperty()
     
     def on_press(self):
-        print('hi')
         self.primed=1
         for child in self.parent.children:
             if child.primed != 1:
@@ -118,7 +138,6 @@ class HisColLabel(ToggleButtonBehavior,Label):
     def on_state(self,widget,value):    
         Clock.schedule_once(lambda dt:self.on_state_for_real(widget,value),0)
     def on_state_for_real(self,widget,value):
-        print('Pressed' )
         global flag
         flag = 1
         if value == 'down':
@@ -187,8 +206,8 @@ class HistoryScreenv2(Screen):
             main_flag = 1
             
             #stop all threads
-            for t in threading.enumerate():
-                print(t.name)
+#            for t in threading.enumerate():
+#                print(t.name)
                 
             App.get_running_app().stop()
             App.get_running_app().root_window.close()
@@ -354,7 +373,7 @@ class HeadingLabel(ToggleButtonBehavior,Label):
         else:
             print('up')
 
-class InfoPop(Popup):
+class InfoPop(ModalView):
     namelist=ObjectProperty()
     row=ObjectProperty()
     def gloss_open(self):
@@ -379,6 +398,7 @@ class InfoPop(Popup):
         sortedkeys=[]
         for key in descdict:
             sortedkeys.append(key)
+        sortedkeys.sort()
         for key in sortedkeys:
             descdata.append({'nom':key,'desc':descdict[key]})
         _glossary.data = descdata
@@ -390,7 +410,7 @@ class InfoPop(Popup):
         pop.open()
         
     def on_dismiss(self):
-        Clock.schedule_once(lambda dt: self.fin_dismiss(),0.1)
+        Clock.schedule_once(lambda dt: self.fin_dismiss(),0.25)
     def fin_dismiss(self):
             self.ids.caro.index=0
         
@@ -418,11 +438,13 @@ class EventContainer(ButtonBehavior,GridLayout):
         Clock.schedule_once(self.finish_init,0)
         
     def finish_init(self,dt):
-        self.pop = InfoPop(title="Superevent Information",namelist=self.namelist,row=self.row)
+        self.pop = InfoPop(namelist=self.namelist,row=self.row)
         
     def details(self):
         self.pop.namelist = self.namelist
         self.pop.row = self.row
+        self.pop.background_color=self.bgcol
+        self.pop.background_color[3] = 1
         self.pop.open()
 
 def statusupdate(obj):
@@ -671,7 +693,7 @@ class MainScreenv2(Screen):
                     winner = lookoutfor[np.argmax(stats)]
                     notifier(winner)
                 
-                pop = InfoPop(title='New Event Detected!',namelist=namelist,row=orderedrow)
+                pop = InfoPop(namelist=namelist,row=orderedrow)
                 pop.open()
                 h5file.close()
                 
@@ -794,3 +816,5 @@ def reset():
 if __name__ == '__main__':
     reset()
     MyApp().run()
+    main_flag = 1 
+    Builder.unload_file("GWalarm.kv")

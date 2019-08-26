@@ -314,6 +314,12 @@
             BoxLayout:
                 size_hint_x:0.5
             BoxLayout:
+                canvas.before:
+                    Color:
+                        rgba: 243/255,243/255,243/255,1
+                    Rectangle:
+                        size:self.size
+                        pos:self.pos
                 size_hint_x:0.5
                 orientation:'horizontal'
                 Label:
@@ -675,10 +681,76 @@
             HisScreenButton:
                 text:'Database Hard Backup'
                 on_press:root.stupid()
+                canvas:
+                    Color:
+                        rgba: 0.2,0.2,0.2,1
+                    Line:
+                        width: 1
+                        points: [self.x+self.width, self.y+self.height, self.x+self.width,self.y]
+
             HisScreenButton:
                 text:'Main Menu'
                 on_press:root.manager.current = 'main'
-                    
+                 
+
+<EventInfoSubHeader@GridLayout>:
+    top_text:'test'
+    bottom_text:'test'
+    color:0,0,0,1
+    rows:2
+    canvas:
+        Color:
+            rgba:0.7,0.7,0.7,0.7
+        Line:
+            width:1
+            points: self.x,self.y+self.height*0.7,self.x+self.width*0.7,self.y+self.height*0.7
+        Color:
+            rgba:0.9,0.9,0.9,0.7
+        Line:
+            width:1
+            points: self.x,self.y,self.x+self.width,self.y
+
+    Label:
+        text:root.top_text
+        font_size:dp(14)
+        color:root.color
+        halign:'left'
+        padding:3,5
+        size_hint_y:0.3
+        text_size:root.width,None
+        valign:'middle'
+    Label:
+        text: '[b]' + root.bottom_text+'[/b]'
+        markup:True
+        color:root.color
+        font_size:dp(30)
+        halign:'left'
+        padding:50,0
+        size_hint_y:0.7
+        text_size:root.width,None
+
+<EventInfoHeader@GridLayout>:
+    cols:2
+    graceid:'torep'
+    revision:'1'
+    color:0,0,0,1
+    canvas.before:
+        Color:
+            rgba: 0.9,0.9,0.9,1
+        Rectangle:
+            pos:self.pos
+            size:self.size
+    EventInfoSubHeader:
+        top_text: 'Event information for'
+        bottom_text:root.graceid
+        color:root.color
+        size_hint_x:0.5
+    EventInfoSubHeader:
+        top_text:'Revision'
+        bottom_text: root.revision
+        color:root.color
+        size_hint_x:0.5
+            
 <InfoLabel@Label>:
     bg_col:(0,0,0,0)
     color:(1,1,1,1)
@@ -707,162 +779,173 @@
         id:caro
         canvas.before:
             Color:
-                rgba:(1,1,1,1)
+                rgba:root.background_color
             Rectangle:
                 pos:self.pos
                 size:self.size
+        canvas:
+            Color:
+                rgba:0.1,0,1,0,1,1
+            Line:
+                width:1
+                rectangle:self.x,self.y,self.width,self.height
         GridLayout:
-            cols:3
-            spacing:(3,0)
-            GridLayout:
-                size_hint:(0.2,1)
-                rows:4 
-                padding: 0,2
-                canvas.before:
-                    Color:
-                        rgba: .2,.2,.2,1
-                    Rectangle:
-                        pos:self.pos
-                        size:self.size
-                canvas.after:
-                    Color:
-                        rgba: 0,0,0,1 
-                    Line:
-                        width:2
-                        rectangle: self.x, self.y, self.width, self.height
-                Label:
-                    text:'EVENT INFORMATION'
-                    markup:True
-                    font_size:dp(16)
-                    size_hint_y:0.1
+            rows:2
+            BoxLayout:
+                size_hint_y:0.13
+                orientation:'vertical'
+                EventInfoHeader:
                     color:0,0,0,1
-                    canvas.before:
-                        Color:
-                            rgba: 0.95,0.95,0.95,1
-                        Rectangle:
-                            pos:self.pos
-                            size:self.size
-                Label:
-                    padding:10,0
-                    text_size:self.width,None
-                    height:self.texture_size[1]
-                    font_size:dp(16)
-                    text:'Welcome to the event information page! \n Here you can find all the interesting info for a particular gravitational wave event. \n Swipe to see where in the sky it may have come from!'
-                Button:
-                    size_hint:(1,0.1)
-                    padding:10,2
-                    text:'Open Glossary'
-                    on_press:root.gloss_open()
-                Button:
-                    text:'Back to Event History'
-                    size_hint_y:0.1
-                    on_press:root.dismiss()
+                    graceid:root.rowdict['GraceID']
+                    revision:root.rowdict['Revision']
             GridLayout:
-                rows:2
-                size_hint:(0.37,1)
-
-                GridLayout:
-                    rows: len(root.part2info)
-                    size_hint_y:0.6
-                    canvas.before:
-                        Color:
-                            rgba: (0,0,0,1)
-                        Rectangle:
-                            size:self.size
-                            pos:self.pos
-                    InfoLabel:
-                        text:root.part2info[0] + ':' + root.rowdict[root.part2info[0]]
-                    InfoLabel:
-                        text:root.part2info[1] + ':' + root.rowdict[root.part2info[1]]
-                    InfoLabel:
-                        text: root.part2info[2] + ':' + root.rowdict[root.part2info[2]]
-                    InfoLabel:
-                        text:root.part2info[3] + ':' + root.rowdict[root.part2info[3]]
-                    InfoLabel:
-                        text: root.part2info[4] + ':' + root.rowdict[root.part2info[4]]
-                    InfoLabel:
-                        text:root.part2info[5] + ':' + root.rowdict[root.part2info[5]]
-                GridLayout:
-                    size_hint_y:0.4
-                    rows: len(root.part3info)
-                    canvas.after:
-                        Color:
-                            rgba:0.2,0.25,0.4,1
-                        Line:
-                            width:2
-                            points: [self.x+self.width+1,self.y+self.height,self.x,self.y+self.height,self.x,self.y,self.x+self.width+1,self.y]
-                    InfoLabel:
-                        text:root.part3info[0] + ':' + root.rowdict[root.part3info[0]]
-                        bg_col:(44/255,160/255,44/255,1)
-                    InfoLabel:
-                        text:root.part3info[1] + ':' + root.rowdict[root.part3info[1]]
-                        bg_col:(31/255,119/255,180/255,1)
-                    InfoLabel:
-                        text: root.part3info[2] + ':' + root.rowdict[root.part3info[2]]
-                        bg_col:(1,127/255,14/255,1)
-                    InfoLabel:
-                        text:root.part3info[3] + ':' + root.rowdict[root.part3info[3]]
-                        bg_col:(214/255,39/255,40/255,1)
-                    InfoLabel:
-                        text: root.part3info[4] + ':' + root.rowdict[root.part3info[4]]
-                        bg_col:(148/255,103/255,189/255,1)
-    
-            GridLayout:
-                rows:2
-                size_hint:(0.33,1)
+                cols:3
+                size_hint_y:0.87
                 BoxLayout:
                     orientation:'horizontal'
-                    size_hint:(1,0.3)
+                    size_hint:(0.25,1)
+                    GridLayout:
+                        rows:3
+                        padding: 0,2
+                        canvas.before:
+                            Color:
+                                rgba: .2,.2,.2,1
+                            Rectangle:
+                                pos:self.pos
+                                size:self.size
+                        Label:
+                            size_hint_y:0.7
+                            padding:10,0
+                            text_size:self.width,None
+                            height:self.texture_size[1]
+                            text:'[size=19dp] Welcome to the [b] event information [/b] page! [/size] [size=15dp] \n\nHere, you can find all the interesting info for a particular gravitational wave event. \n\nSwipe to the right to see where in the sky it may have come from! [/size]'
+                            markup:True
+                            halign: 'justify'
+                        HisScreenButton:
+                            size_hint:(1,0.15)
+                            padding:10,2
+                            text:'Open Glossary'
+                            on_press:root.gloss_open()
+                            canvas:
+                                Color:
+                                    rgba: 0.2,0.2,0.2,1
+                                Line:
+                                    width: 1
+                                    points: [self.x, self.y, self.x+self.width,self.y]
+                        HisScreenButton:
+                            text:'Back to Event History'
+                            size_hint_y:0.15
+                            on_press:root.dismiss()
+                GridLayout:
+                    rows:2
+                    size_hint:(0.4,1)
+                    GridLayout:
+                        rows: len(root.part2info)
+                        size_hint_y:0.6
+                        canvas.before:
+                            Color:
+                                rgba: (0,0,0,1)
+                            Rectangle:
+                                size:self.size
+                                pos:self.pos
+                        InfoLabel:
+                            text:root.part2info[1] + ':' + root.rowdict[root.part2info[1].replace('+-',u'\xb1')]
+                        InfoLabel:
+                            text: root.part2info[2] + ':' + root.rowdict[root.part2info[2]]
+                        InfoLabel:
+                            text:root.part2info[3] + ':' + root.rowdict[root.part2info[3]]
+                        InfoLabel:
+                            text: root.part2info[4] + ':' + root.rowdict[root.part2info[4]]
+                    GridLayout:
+                        size_hint_y:0.4
+                        rows: len(root.part3info)
+                        canvas.after:
+                            Color:
+                                rgba:0.2,0.25,0.4,1
+                            Line:
+                                width:2
+                                points: [self.x+self.width+1,self.y+self.height,self.x,self.y+self.height,self.x,self.y,self.x+self.width+1,self.y]
+                        InfoLabel:
+                            text:root.part3info[0] + ':' + root.rowdict[root.part3info[0]]
+                            bg_col:(44/255,160/255,44/255,1)
+                        InfoLabel:
+                            text:root.part3info[1] + ':' + root.rowdict[root.part3info[1]]
+                            bg_col:(31/255,119/255,180/255,1)
+                        InfoLabel:
+                            text: root.part3info[2] + ':' + root.rowdict[root.part3info[2]]
+                            bg_col:(1,127/255,14/255,1)
+                        InfoLabel:
+                            text:root.part3info[3] + ':' + root.rowdict[root.part3info[3]]
+                            bg_col:(214/255,39/255,40/255,1)
+                        InfoLabel:
+                            text: root.part3info[4] + ':' + root.rowdict[root.part3info[4]]
+                            bg_col:(148/255,103/255,189/255,1)
+
+                GridLayout:
+                    rows:3
+                    size_hint:(0.33,1)
                     canvas.before:
                         Color:
-                            rgba:0,0,0,1
+                            rgba:242/255,211/255,242/255,1
                         Rectangle:
                             pos:self.pos
                             size:self.size
-                    GridLayout:
-                        canvas.before:
-                            Color:
-                                rgba:0,0,0,1
-                            Line:
-                                width:2
-                                rectangle:self.x,self.y,self.width,self.height
-                        rows:2
-                        Label:
-                            text:root.part1info[0][3:]+' left?'
-                            font_size:dp(14)
-                            text_size:self.width,None
-                            height:self.texture_size[1]
-                            halign:'center'
-                        Label:
-                            text:root.rowdict[root.part1info[0]]
-                            font_size:dp(20)
-                    GridLayout:                                
-                        canvas.before:
-                            Color:
-                                rgba:0,0,0,1
-                            Line:
-                                width:2
-                                rectangle:self.x,self.y,self.width,self.height
-                        rows:2
-                        Label:
-                            text:root.part1info[1][3:]+' progenitor?'
-                            font_size:dp(14)
-                            halign:'center'
-                        Label:
-                            text:root.rowdict[root.part1info[1]]
-                            font_size:dp(20)
-
-                BoxLayout:
-                    size_hint:(1,0.7)
-                    canvas.after:
                         Color:
-                            rgba: 0.2,0.25,0.4,1
+                            rgba:0.6,0.6,0.6,0.6
                         Line:
                             width:2
-                            points:[self.x-2,self.y+self.height*0.58,self.x-2,self.y+self.height,self.x+self.width,self.y+self.height,self.x+self.width,self.y,self.x-2,self.y]
+                            rectangle:self.x,self.y,self.width,self.height
 
-                    AsyncImage:
-                        source:root.rowdict['GraceID']+'_pie.png'
+                    Label:
+                        size_hint:1,0.1
+                        text:'If [b]astrophysical[/b] in origin. . .'
+                        color:0,0,0,1
+                        markup:True
+                    BoxLayout:
+                        orientation:'horizontal'
+                        size_hint:1,0.25
+                        GridLayout:
+                            rows:2
+                            Label:
+                                text:root.part1info[0][3:]+' present?'
+                                font_size:dp(14)
+                                text_size:self.width,None
+                                height:self.texture_size[1]
+                                halign:'center'
+                                color:0,0,0,1
+                            Label:
+                                text:root.rowdict[root.part1info[0]]
+                                font_size:dp(20)
+                                color:0,0,0,1
+                        GridLayout:                                
+                            canvas.before:
+                                Color:
+                                    rgba:242/255,211/255,242/255,1
+                                Line:
+                                    width:2
+                                    rectangle:self.x,self.y,self.width,self.height
+                            rows:2
+                            Label:
+                                text:'NS progenitor?'
+                                font_size:dp(14)
+                                halign:'center'
+                                color:0,0,0,1
+                            Label:
+                                text:root.rowdict[root.part1info[1]]
+                                font_size:dp(20)
+                                color:0,0,0,1
+    
+                    BoxLayout:
+                        size_hint:(1,0.67)
+                        canvas.after:
+                            Color:
+                                rgba: 0.2,0.25,0.4,1
+                            Line:
+                                width:2
+                                points:[self.x-2,self.y+self.height*0.58,self.x-2,self.y+self.height,self.x+self.width,self.y+self.height,self.x+self.width,self.y,self.x-2,self.y]
+    
+                        AsyncImage:
+                            source:root.rowdict['GraceID']+'_pie.png'
         BoxLayout:
             Button:
                 text:'Back to \n Event \n History'
