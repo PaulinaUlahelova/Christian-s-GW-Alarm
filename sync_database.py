@@ -12,6 +12,10 @@ def sync_database():
     from gcn_test import process_gcn
     import os
     import lxml
+    import multiprocessing
+    import sys
+    
+    sys.setrecursionlimit(100000)
     
     #Get old links by parsing properly, and download + save to file!
     
@@ -33,6 +37,7 @@ def sync_database():
     def hasstylenotclass(tag):
         return tag.has_attr('style') and not tag.has_attr('class')
     
+
     for col in soup.tbody.find_all("tr"):
         #print(row)
         #for col in row("tr"):
@@ -43,16 +48,14 @@ def sync_database():
         eventnames.append(name)
         eventlinks.append("https://gracedb.ligo.org/superevents/"+name+"/files/")
     
-    
-    for i,link in enumerate(eventlinks):
-        r =requests.get(link) 
+    def process(q):
+        link,evname = q.get(True)
+        r = requests.get(link)
         soup = BeautifulSoup(r.text,"lxml")
-        
         all_files = [a['href'] for a in soup.find_all("a")]
         
         bestfiles = []
         imglinks = []
-        htmllink=[]
     
         if any('Update' in s for s in all_files):
             bestfiles = [s for s in all_files if 'Update' in s]
@@ -72,13 +75,28 @@ def sync_database():
         imgfilepath = "https://gracedb.ligo.org"+imgfile
         datafilepath = "https://gracedb.ligo.org"+datafile
         
-        imgpath = eventnames[i]+'.png'
-        datapath = 'PreviousEventToRead.xml'
-        os.system("curl -0 "+datafilepath + '> ' + './'+datapath)
-        os.system("curl -0 "+imgfilepath + '> ' + './'+imgpath)
+        imgpath = evname+'.png'
+        datapath = 'ToRead'+evname+'.xml'
         
+        os.system("curl --silent -0 "+imgfilepath + '> ' + './'+imgpath)
+        os.system("curl --silent -0 "+datafilepath + '> ' + './'+datapath)
+
         payload = open(datapath,'rb').read()
         root=lxml.etree.fromstring(payload)
         process_gcn(payload,root)
+
+    q = multiprocessing.Queue()
+    pool = multiprocessing.Pool(len(eventlinks),process,(q,))
+    for i,link in enumerate(eventlinks):
+        q.put([link,eventnames[i]])
+
+    pool.close()
+    pool.join()
+    print('rm files')
+    
+    for file in os.listdir():
+        if 'ToRead' in file:
+            os.remove(file)
 #    if i == 0:
 #        break
+sync_database()

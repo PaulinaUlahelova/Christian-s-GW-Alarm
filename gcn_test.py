@@ -13,8 +13,11 @@ from bs4 import BeautifulSoup
 import requests
 import scipy.constants
 import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
 import numpy as np
-
+import time
+import threading
 
 class Event(IsDescription):
     GraceID=StringCol(30)
@@ -60,31 +63,12 @@ def process_gcn(payload, root):
         except:
             os.mkdir('./event_data')
             os.chdir('./event_data')    
-    while True:
-        try:
-            h5file = open_file("Event Database",mode="a",title="eventinfo")
-            break
-        except ValueError:
-            print("file in use... trying again in 5s")
-            time.sleep(5)
-    try:
-        h5file.create_group("/",'events')
-    except NodeError:
-        pass
     
     # Read all of the VOEvent parameters from the "What" section.
     params = {elem.attrib['name']:
               elem.attrib['value']
               for elem in root.iterfind('.//Param')}
     descs = [elem.text for elem in root.iterfind('.//Description')]
-
-        
-    if params['AlertType'] == 'Retraction':
-        #Remove the event info if a retraction is issued - we don't care anymore
-        #FIXME: in future flag the event instead and display seperately for interest/ref
-        h5file.remove_node("/events",params['GraceID'])
-        h5file.close()
-        return
     
     if params['Group'] != 'CBC':
         return
@@ -108,18 +92,18 @@ def process_gcn(payload, root):
         imglinks = [s for s in all_files if 'bayestar.png' in s]
     imgfile = imglinks[-1]
     imgfilepath = "https://gracedb.ligo.org"+imgfile
-    os.system("curl -0 "+imgfilepath + '> ' + './'+skymap)
+    
+    def download(imgfilepath,skymap):
+        os.system("curl --silent -0 "+imgfilepath + '> ' + './'+skymap)
+        img = plt.imread(skymap)
+        plt.imsave(skymap,img[100:475,50:750,:])
+    t=threading.Thread(target=download,args=(imgfilepath,skymap))
+    t.start()
     
     '''Skymap img resizing (done by trial and error beforehand)'''
-    img = plt.imread(skymap)
-    plt.imsave(skymap,img[100:475,50:750,:])
 
     #os.system("curl -0 "+filepath + '> ' + fitspath)
     #os.system("ligo-skymap-plot map_to_convert.fits.gz"+" -o "+skymap+" --annotate --contour 50 90 --geo")
-    try:
-        table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
-    except:
-        table=h5file.get_node("/events",params['GraceID'])
         
     if any('bayestar.html' in s for s in all_files):
         htmllinks = [s for s in all_files if 'bayestar.html' in s]
@@ -136,7 +120,7 @@ def process_gcn(payload, root):
             diststd= str("{0:.3f}".format(float(diststd)))
     finaldist = dist + ' +- '+diststd + ' Mpc'
     
-    det_event = table.row
+
     lookoutfor = ['BBH','BNS','MassGap','NSBH','Terrestrial']
     lookoutfor2=['HasNS','HasRemnant']
     order = []
@@ -149,6 +133,32 @@ def process_gcn(payload, root):
     
     print(params['GraceID'])
     
+    while True:
+        try:
+            h5file = open_file("Event Database",mode="a",title="eventinfo")
+            break
+        except:
+            time.sleep(1)
+    try:
+        h5file.create_group("/",'events')
+    except NodeError:
+        pass
+    
+    if params['AlertType'] == 'Retraction':
+        #Remove the event info if a retraction is issued - we don't care anymore
+        #FIXME: in future flag the event instead and display seperately for interest/ref
+        try:
+            h5file.remove_node("/events",params['GraceID'])
+        except:
+            pass
+        h5file.close()
+        return
+    try:
+        table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
+    except:
+        table=h5file.get_node("/events",params['GraceID'])
+        
+    det_event = table.row
     for key, value in params.items():
         #print(key, '=', value)
         if key == 'FAR':
@@ -207,7 +217,11 @@ def process_gcn(payload, root):
     two1=two1.split('.')[0]
     upt_formtime = one1+' at '+two1
     det_event['UpdateTime'] = upt_formtime
-        
+    det_event.append()
+    table.flush()
+    h5file.close()
+    
+    '''PLOTTING'''
     #save the pie of possibilities
     specindex = np.argmax(vals)
     
@@ -231,31 +245,8 @@ def process_gcn(payload, root):
 
     plt.tight_layout()
     plt.savefig(params['GraceID']+'_pie.png')
-    
-#    pos=[0,1]
-#    tickpos=np.array([0,0.2,0.4,0.6,0.8,1])*100
-#    data = np.array(vals2)*100
-#    
-#    fig2,ax2 = plt.subplots(figsize=(4,1.5))
-#    # Hide the right and top spines
-#    ax2.spines['right'].set_visible(False)
-#    ax2.spines['top'].set_visible(False)
-#    
-#    # Only show ticks on the left and bottom spines
-#    ax2.yaxis.set_ticks_position('left')
-#    ax2.xaxis.set_ticks_position('bottom')
-#    ax2.barh(pos,data,height=0.7,color=['C8','C9'])
-#    plt.xlabel('Probability (%)')
-#    plt.xticks(tickpos)
-#    plt.yticks(pos,order2)
-#    plt.tight_layout()
-#    plt.savefig(params['GraceID']+'_bar.png')
     plt.close(fig1)
-#    plt.close(fig2)
-    
-    det_event.append()
-    table.flush()
-    h5file.close()
+    t.join()
     
     
 #gcn.listen(host="209.208.78.170",handler=process_gcn)
