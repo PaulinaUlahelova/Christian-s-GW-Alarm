@@ -47,7 +47,10 @@ class Event(IsDescription):
     gcn.notice_types.LVC_RETRACTION)
 
 def process_gcn(payload, root):
-
+    if ('Thisisaneventsim').encode() in payload:
+        sim = True
+    else:
+        sim = False
     # Respond only to 'test' events.
     # VERY IMPORTANT! Replace with the following code
     # to respond to only real 'observation' events.
@@ -153,11 +156,13 @@ def process_gcn(payload, root):
             pass
         h5file.close()
         return
-    try:
-        table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
-    except:
-        table=h5file.get_node("/events",params['GraceID'])
-
+    if sim == False:
+        try:
+            table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
+        except:
+            table=h5file.get_node("/events",params['GraceID'])
+    else:
+        table = h5file.create_table(h5file.root.events,'EventSimulation',Event,'Simulation')
     det_event = table.row
     for key, value in params.items():
         #print(key, '=', value)
@@ -190,6 +195,12 @@ def process_gcn(payload, root):
             else:
                 det_event[key]=str("{0:.2f}".format(float(value)*100))+'%'
             descriptions[key]=descs[i]
+        elif key == 'GraceID':
+            if sim:
+                det_event[key] = 'EventSimulation'
+            else:
+                det_event[key] = value
+                descriptions[key]=descs[i]
         else:
             try:
                 det_event[key] = value

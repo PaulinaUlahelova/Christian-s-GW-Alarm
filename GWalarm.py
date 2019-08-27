@@ -50,6 +50,8 @@ import re
 import numpy as np
 from matplotlib.image import imread
 from matplotlib.pyplot import imsave
+import random
+import lxml
 
 '''CHECK IF ON RASPBERRY PI FOR GPIO FUNCTIONALITY'''
 if os.uname()[4][:3] == 'arm':
@@ -325,10 +327,12 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                     
                 if row['GraceID'].decode() not in widgetids:
                     if first == 0:
-                        '''LAZY SOLUTION - NOT VERY FUTUREPROOF''' #FIXME
-                        '''NEW EVENT!!!'''
-                        global newevent_flag
-                        newevent_flag=1
+                        if row['AlertType'] == 'Preliminary':
+                            '''LAZY SOLUTION - NOT VERY FUTUREPROOF''' #FIXME
+                            '''NEW EVENT!!!'''
+                            global newevent_flag
+                            if newevent_flag == 0:
+                                newevent_flag=1
                 
                 for j in range(len(specialnames)):
                     string=row[specialnames[j]]
@@ -342,7 +346,7 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                 to_add_to_data['bgcol'] = backcolors[np.argmax(stats)]
                 new_data.append(to_add_to_data)
                 
-                if i == 0:
+                if i == 0 and sorttype == 'Time Descending':
                     winner = lookoutfor[np.argmax(stats)]
                 
             rv.data = new_data
@@ -350,7 +354,7 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             print('Event History Updated...')
             
             if pixels:
-                notifier(winner)
+                type_notif(winner)
             h5file.close()
             #reset the flag
             first = 0
@@ -375,6 +379,21 @@ class HeadingLabel(ToggleButtonBehavior,Label):
             print('down')
         else:
             print('up')
+
+class DevPop(Popup):
+    def simulate(self):
+        self.dismiss()
+        def process():
+            payload=open("EventDemonstration.xml",'rb').read()
+            string='Thisisaneventsim'
+            root=lxml.etree.fromstring(payload)
+            payload+=string.encode()
+            process_gcn(payload,root)
+            global newevent_flag
+            newevent_flag=1
+        t = threading.Thread(target=process)
+        t.start()
+        
 
 class InfoPop(ModalView):
     namelist=ObjectProperty()
@@ -454,13 +473,17 @@ def statusupdate(obj):
     global main_flag
     main_flag=0
     while True:
-        data,stats = statusdetect()
+        data,stats,names = statusdetect()
         
         for i,elem in enumerate(data):
             setattr(obj,'det'+str(i+1)+'props',elem)
         
         '''LED CONTROL'''
         if pixels:
+            order = ['GEO 600','LIGO Livingston','LIGO Hanford','Virgo']
+            statindexes = [names.index(item) for item in order]
+            stats = [x for _,x in sorted(zip(statindexes,stats))]
+
             for i,stat in enumerate(stats):
                 if stat == 0:
                     #red
@@ -530,7 +553,7 @@ def plotupdate(obj):
                         if 'png' in linkstr:
                             filepath = 'Detector_Plot_0.png'                
                             source='https://www.gw-openscience.org'+linkstr
-                            os.system("curl -0 "+ source+ ' > ' + filepath)
+                            os.system("curl --silent -0 "+ source+ ' > ' + filepath)
                             img = imread("./"+filepath)
                             break
                     break
@@ -551,7 +574,7 @@ def plotupdate(obj):
             if 'png' in linkstr:
                 filepath = 'Detector_Plot_'+str(i)+'.png'                
                 source='https://www.gw-openscience.org'+linkstr
-                os.system("curl -0 "+ source+ ' > ' + filepath)
+                os.system("curl --silent -0 "+ source+ ' > ' + filepath)
                 descripts.append(str(link.get("title")))
                 paths.append(filepath)
                 i+=1
@@ -561,7 +584,7 @@ def plotupdate(obj):
                 filepath = 'Detector_Plot_'+str(i)+'.png'
                 descripts.append(str(link['title']))
                 source= 'https://www.gw-openscience.org'+str(link.get("href"))
-                os.system("curl -0 "+ source+ ' > ' + filepath)
+                os.system("curl --silent -0 "+ source+ ' > ' + filepath)
                 paths.append(filepath)
                 
                 img = imread("./"+filepath)
@@ -582,127 +605,169 @@ def plotupdate(obj):
             time.sleep(5)
 
             
-def notifier(event_type):
-    if event_type == 'Terrestrial':
-        pixels[1] = (255,80,70)
-    elif event_type == 'NSBH':
-        pixels[1] = (255,255,25)
-    elif event_type == 'BBH':
-        pixels[1] = (122,180,255)
-    elif event_type == 'MassGap':
-        pixels[1] = (226,130,245)
-    elif event_type == 'BNS':
-        pixels[1] = (102,255,112)
-    pixels.show()
+def type_notif(e_type,flasher='off'):
+    def color(event_type):
+        if event_type == 'Terrestrial':
+            pixels[1] = (255,80,70)
+        elif event_type == 'NSBH':
+            pixels[1] = (255,255,25)
+        elif event_type == 'BBH':
+            pixels[1] = (122,180,255)
+        elif event_type == 'MassGap':
+            pixels[1] = (226,130,245)
+        elif event_type == 'BNS':
+            pixels[1] = (102,255,112)
+        pixels.show()
+    if flasher == 'on':
+        duration=10
+        step=0.5
+        j = 0
+        while j < duration:
+            color(e_type)
+            time.sleep(step)
+            pixels[1]=(0,0,0)
+            pixels.show()
+            time.sleep(step)
+    else:
+        color(e_type)  
+            
+def buzz(times):
+    i=0
+    while i < times:
+        GPIO.output(buzzPin,GPIO.HIGH)
+        time.sleep(0.1)
+        GPIO.output(buzzPin,GPIO.LOW)
+        time.sleep(0.05)
+        GPIO.output(buzzPin,GPIO.HIGH)
+        time.sleep(0.1)
+        GPIO.output(buzzPin,GPIO.LOW)
+        time.sleep(0.05)
+        GPIO.output(buzzPin,GPIO.HIGH)
+        time.sleep(0.1)
+        GPIO.output(buzzPin,GPIO.LOW)
+        time.sleep(0.05)
+        GPIO.output(buzzPin,GPIO.HIGH)
+        time.sleep(0.1)
+        GPIO.output(buzzPin,GPIO.LOW)
+        time.sleep(0.05)   
+
+        i+=1
+
 
 class MainScreenv2(Screen):
+    notif_light_var=NumericProperty(0)
+
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
-        
-        def event_waiting():
-            '''New event popup handler'''
-            global newevent_flag
-            global main_flag
-            newevent_flag=0
-            main_flag=0
-            
-            def buzz(times):
-                i=0
-                while i < times:
-                    GPIO.output(buzzPin,GPIO.HIGH)
-                    time.sleep(0.1)
-                    GPIO.output(buzzPin,GPIO.LOW)
-                    time.sleep(0.05)
-                    GPIO.output(buzzPin,GPIO.HIGH)
-                    time.sleep(0.1)
-                    GPIO.output(buzzPin,GPIO.LOW)
-                    time.sleep(0.05)
-                    GPIO.output(buzzPin,GPIO.HIGH)
-                    time.sleep(0.1)
-                    GPIO.output(buzzPin,GPIO.LOW)
-                    time.sleep(0.05)
-                    GPIO.output(buzzPin,GPIO.HIGH)
-                    time.sleep(0.1)
-                    GPIO.output(buzzPin,GPIO.LOW)
-                    time.sleep(0.05)   
-            
-                    i+=1
-            
-            while True:
-                while True:
-                    #check for the flag once per minute (same rate the file is polled)
-                    if newevent_flag == 1:
-                        newevent_flag=0
-                        #skip a level up to execute the rest of the loop, then back to waiting.
-                        if buzzPin is not None:
-                            buzzthread = threading.Thread(target=buzz,args=(3,))
-                            buzzthread.start()
-                        print('New event has been detected!!')
-                        break
-                    if main_flag == 1:
-                        print('Event listener #2 closing...')
-                        #return takes you right out of the function
-                        return
-                    time.sleep(5)
-                
-                #Close all active popups - prevents crashes if left unattended for a while.
-                for widg in App.get_running_app().root_window.children:
-                    if isinstance(widg,InfoPop):
-                        widg.dismiss()
-                
-                #Read in the new event
-                if os.path.basename(os.getcwd()) != "event_data":
-                    try:
-                        os.chdir("./event_data")
-                    except:
-                        os.mkdir("./event_data")
-                        os.chdir("./event_data")
-                while True:
-                    try:
-                        h5file = open_file("Event Database",mode="r",title="eventinfo")
-                        break
-                    except:
-                        print("file in use... trying again in 5s")
-                        time.sleep(5)
-                try:
-                    h5file.root.events
-                except NoSuchNodeError:
-                    time.sleep(5)
-                    pass      
-                
-                tabs=[tab.name for tab in h5file.list_nodes("/events")]
-                eventid = list(reversed(sorted(tabs)))[0]
-                for tab in h5file.list_nodes("/events"):
-                    if tab.name == eventid:
-                        new_event_table=tab
-                namelist = new_event_table.colnames
-                new_event_row = new_event_table[-1]
-                orderedrow = []
-                for key in namelist:
-                    orderedrow.append(new_event_row[key].decode())
-                    
-                if pixels:
-                    stats = []
-                    lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
-                    for name in lookoutfor:
-                        stats.append(float(new_event_row[name].decode().strip('%')))
-                    winner = lookoutfor[np.argmax(stats)]
-                    notifier(winner)
-                
-                pop = InfoPop(namelist=namelist,row=orderedrow)
-                pop.open()
-                h5file.close()
-                
-        event_waiting_thread = threading.Thread(target=event_waiting)
+        event_waiting_thread = threading.Thread(target=self.event_waiting)
         event_waiting_thread.start()
         
-class AboutPop(Popup):
-    def stop(self):
+    def event_waiting(self):
+        '''New event popup handler'''
+        global newevent_flag
         global main_flag
-        main_flag = 1 
-        self.dismiss()
-        Builder.unload_file("GWalarm.kv")
-        App.get_running_app().stop()
+        newevent_flag=0
+        main_flag=0
+                    
+        while True:
+            while True:
+                #check for the flag once per minute (same rate the file is polled)
+                if newevent_flag == 1:
+                    #skip a level up to execute the rest of the loop, then back to waiting.
+                    if buzzPin is not None:
+                        buzzthread = threading.Thread(target=buzz,args=(3,))
+                        buzzthread.start()
+                    if pixels:
+                        notifthread = threading.Thread(target=notifier)
+                        notifthread.start()
+                    print('New event has been detected!!')
+                    break
+                if main_flag == 1:
+                    print('Event listener #2 closing...')
+                    #return takes you right out of the function
+                    return
+                time.sleep(5)
+            
+            #Close all active popups - prevents crashes if left unattended for a while.
+            for widg in App.get_running_app().root_window.children:
+                if isinstance(widg,InfoPop):
+                    widg.dismiss()
+            
+            #Read in the new event
+            if os.path.basename(os.getcwd()) != "event_data":
+                try:
+                    os.chdir("./event_data")
+                except:
+                    os.mkdir("./event_data")
+                    os.chdir("./event_data")
+            while True:
+                try:
+                    h5file = open_file("Event Database",mode="a",title="eventinfo")
+                    break
+                except:
+                    print("file in use... trying again in 5s")
+                    time.sleep(5)
+            try:
+                h5file.root.events
+            except NoSuchNodeError:
+                time.sleep(5)
+                pass      
+            
+            tabs=[tab.name for tab in h5file.list_nodes("/events")]
+            if 'EventSimulation' not in tabs:
+                eventid = list(reversed(sorted(tabs)))[0]
+            else:
+                eventid = 'EventSimulation'
+            for tab in h5file.list_nodes("/events"):
+                if tab.name == eventid:
+                    new_event_table=tab
+            namelist = new_event_table.colnames
+            new_event_row = new_event_table[-1]
+            orderedrow = []
+            for key in namelist:
+                orderedrow.append(new_event_row[key].decode())
+                
+            if pixels:
+                stats = []
+                lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
+                for name in lookoutfor:
+                    stats.append(float(new_event_row[name].decode().strip('%')))
+                winner = lookoutfor[np.argmax(stats)]
+                type_notif(winner)
+                
+            if  eventid == 'EventSimulation':
+                h5file.remove_node("/events",'EventSimulation')
+            h5file.close()
+            newevent_flag=0
+
+            pop = InfoPop(namelist=namelist,row=orderedrow)
+            extralabel = Label(text='[b]NEW EVENT[/b]',markup=True,font_size=20,halign='left',color=[0,0,0,1],size_hint_x=0.2)
+            pop.ids.header.add_widget(extralabel)
+            if pixels:
+                pop.ids.but1.bind(on_press=self.notif_off)
+                pop.ids.but2.bind(on_press=self.notif_off)
+            pop.open()
+
+    def notifier(self):
+        self.notif_light_var=1
+        rand1 = "{0:.6f}".format(random.random())
+        rand2 = "{0:.6f}".format(random.random())
+        rand3 = "{0:.6f}".format(random.random())
+                
+        while self.notif_light_var==1:
+            randtuple=tuple(255*x for x in (rand1,rand2,rand3))
+            pixels[0] = randtuple
+            pixels.show()
+            time.sleep(0.05)
+            rand1+=2/255
+            rand2+=1.5/255
+            rand3+=1/255
+            
+        pixels[0] = (0,0,0)
+        pixels.show()
+    
+    def notif_off(self,instance):
+        self.notif_light_var = 0
         
 class StatusScreenv2(Screen):
     det1props = ListProperty()

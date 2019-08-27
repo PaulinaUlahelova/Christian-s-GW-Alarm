@@ -24,6 +24,12 @@
     texty:'n'
     rows:4
     on_press:self.parent.parent.parent.manager.current=self.name
+    canvas.before:
+        Color:
+            rgba:1,173/255,158/255,1 
+        Rectangle:
+            size:self.size
+            pos:self.pos
     canvas.after:
         Color:
             rgba: 0,0,0,1
@@ -58,38 +64,53 @@
             allow_stretch:True
             keep_ratio:False
             
-<DevPop@Popup>:
+<DevPop>:
     size_hint:0.4,0.4
-    Label:
-        text:'To be replaced...'
-    
+    TabbedPanel:
+        do_default_tab:'False'
+        TabbedPanelItem:
+            text: 'Team info!'
+            Label:
+                text:'To be replaced...'
+        TabbedPanelItem:
+            text: 'Event simulation'
+            Button:
+                text: 'Send an event trigger and \nsee what happens...'
+                on_press:root.simulate()
 <DeveloperAboutButton@ButtonBehavior+BoxLayout>:
     img1:'./IGR.jpg'
     img2:'./UofG.jpg'
-    labtext:'About the Developers'
+    labtext:'About the Team'
     on_press:Factory.DevPop().open()
     padding:0,2
     
     canvas.before:
         Color:
+            rgba:1,173/255,158/255,1 
+        Rectangle:
+            size:self.size
+            pos:self.pos
+        Color:
             rgba: 0,0,0,1
         Line:
             width:1
             rectangle: self.x, self.y, self.width, self.height
-    
+
     Image:
         source:root.img2
         size_hint_x:0.35
     Label:
-        text:root.labtext
+        text:'[b]' + root.labtext+'[/b]'
         font_size:dp(20)
         color:0,0,0,1
         size_hint_x:0.5
+        markup:True
     Image:
         source:root.img1
         size_hint_x:0.15
 
 <MainScreenv2@Screen>:
+    notif_light_var:0
     GridLayout:
         rows:3
         GridLayout:
@@ -128,12 +149,6 @@
             size_hint_y:0.6
             padding:20,5,20,0
             
-#            LabButton:
-#                name:'plots'
-#                titletext:'Plots'
-#                texty:'View detector noise curves, maximum event detection ranges and more'
-#                imgsource:'./KAGRA.jpg'
-
             LabButton:
                 name:'history'
                 titletext:'[b] Event History [/b]'
@@ -720,7 +735,7 @@
         text_size:root.width,None
 
 <EventInfoHeader@GridLayout>:
-    cols:2
+    cols:3
     graceid:'torep'
     revision:'1'
     color:0,0,0,1
@@ -739,7 +754,7 @@
         top_text:'Revision'
         bottom_text: root.revision
         color:root.color
-        size_hint_x:0.5
+        size_hint_x:0.4
             
 <InfoLabel@Label>:
     bg_col:(0,0,0,0)
@@ -785,6 +800,7 @@
                 size_hint_y:0.13
                 orientation:'vertical'
                 EventInfoHeader:
+                    id:header
                     color:0,0,0,1
                     graceid:root.rowdict['GraceID']
                     revision:root.rowdict['Revision']
@@ -823,6 +839,7 @@
                                     width: 1
                                     points: [self.x, self.y, self.x+self.width,self.y]
                         HisScreenButton:
+                            id:but1
                             text:'Back to Event History'
                             size_hint_y:0.15
                             on_press:root.dismiss()
@@ -937,7 +954,8 @@
                         AsyncImage:
                             source:root.rowdict['GraceID']+'_pie.png'
         BoxLayout:
-            Button:
+            HisScreenButton:
+                id:but2
                 text:'Back to \n Event \n History'
                 size_hint:(0.1,0.3)
                 on_press:root.dismiss()
