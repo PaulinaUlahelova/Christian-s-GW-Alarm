@@ -85,6 +85,9 @@ else:
     pixels = None
     buzzPin= None
 
+Builder.unload_file("GWalarm.kv")
+Builder.load_file('GWalarm.kv')
+
 '''are we in the right folder? Preserves img functionality'''
 if os.path.basename(os.getcwd()) != 'event_data':
     os.chdir('./event_data')
@@ -116,8 +119,7 @@ flag = 0
 main_flag=0
 newevent_flag=0
 
-Builder.unload_file("GWalarm.kv")
-Builder.load_file('GWalarm.kv')
+
 
 class HisColLabel(ToggleButtonBehavior,Label):
     sorttype=ObjectProperty()
