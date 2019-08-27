@@ -47,7 +47,7 @@ class Event(IsDescription):
     gcn.notice_types.LVC_RETRACTION)
 
 def process_gcn(payload, root):
-    
+
     # Respond only to 'test' events.
     # VERY IMPORTANT! Replace with the following code
     # to respond to only real 'observation' events.
@@ -55,56 +55,56 @@ def process_gcn(payload, root):
         return
     #acknowledge
     #print('I have received a notice!')
-    
+
     #ensure correct working directory and open the table
     if os.path.basename(os.getcwd()) != "event_data":
         try:
             os.chdir('./event_data')
         except:
             os.mkdir('./event_data')
-            os.chdir('./event_data')    
-    
+            os.chdir('./event_data')
+
     # Read all of the VOEvent parameters from the "What" section.
     params = {elem.attrib['name']:
               elem.attrib['value']
               for elem in root.iterfind('.//Param')}
     descs = [elem.text for elem in root.iterfind('.//Description')]
-    
+
     if params['Group'] != 'CBC':
         return
-    
+
     #prepare path for localization skymap, then download and produce the map in png format
     #filepath = params['skymap_fits']
     #fitspath = './map_to_convert.fits.gz'
-    
+
     filesurl = "https://gracedb.ligo.org/superevents/"+params['GraceID']+"/files/"
     skymap = params['GraceID']+'.png'
-    r =requests.get(filesurl) 
+    r =requests.get(filesurl)
     soup = BeautifulSoup(r.text,"lxml")
-    
+
     all_files = [a['href'] for a in soup.find_all("a")]
     imglinks = []
     htmllinks=[]
-    
+
     if any('LALInferenceOffline.png' in s for s in all_files):
         imglinks = [s for s in all_files if 'LALInferenceOffline.png' in s]
     else:
         imglinks = [s for s in all_files if 'bayestar.png' in s]
     imgfile = imglinks[-1]
     imgfilepath = "https://gracedb.ligo.org"+imgfile
-    
+
     def download(imgfilepath,skymap):
         os.system("curl --silent -0 "+imgfilepath + '> ' + './'+skymap)
         img = plt.imread(skymap)
         plt.imsave(skymap,img[100:475,50:750,:])
     t=threading.Thread(target=download,args=(imgfilepath,skymap))
     t.start()
-    
+
     '''Skymap img resizing (done by trial and error beforehand)'''
 
     #os.system("curl -0 "+filepath + '> ' + fitspath)
     #os.system("ligo-skymap-plot map_to_convert.fits.gz"+" -o "+skymap+" --annotate --contour 50 90 --geo")
-        
+
     if any('bayestar.html' in s for s in all_files):
         htmllinks = [s for s in all_files if 'bayestar.html' in s]
     htmlfile = htmllinks[-1]
@@ -119,7 +119,7 @@ def process_gcn(payload, root):
             diststd = col.text.split('\n')[2]
             diststd= str("{0:.3f}".format(float(diststd)))
     finaldist = dist + ' +- '+diststd + ' Mpc'
-    
+
 
     lookoutfor = ['BBH','BNS','MassGap','NSBH','Terrestrial']
     lookoutfor2=['HasNS','HasRemnant']
@@ -130,9 +130,9 @@ def process_gcn(payload, root):
     descriptions={}
     # Print all parameters.
     i=0
-    
+
     print(params['GraceID'])
-    
+
     while True:
         try:
             h5file = open_file("Event Database",mode="a",title="eventinfo")
@@ -143,7 +143,7 @@ def process_gcn(payload, root):
         h5file.create_group("/",'events')
     except NodeError:
         pass
-    
+
     if params['AlertType'] == 'Retraction':
         #Remove the event info if a retraction is issued - we don't care anymore
         #FIXME: in future flag the event instead and display seperately for interest/ref
@@ -157,7 +157,7 @@ def process_gcn(payload, root):
         table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
     except:
         table=h5file.get_node("/events",params['GraceID'])
-        
+
     det_event = table.row
     for key, value in params.items():
         #print(key, '=', value)
@@ -187,7 +187,7 @@ def process_gcn(payload, root):
             vals2.append(float(value))
             if float(value) < 0.001:
                 det_event[key] = '< 0.1%'
-            else:  
+            else:
                 det_event[key]=str("{0:.2f}".format(float(value)*100))+'%'
             descriptions[key]=descs[i]
         else:
@@ -207,7 +207,7 @@ def process_gcn(payload, root):
     one=one.replace(':','-')
     two = two.split('.')[0]
     det_formtime = one+' at '+two
-    
+
     det_event['DetectionTime']=det_formtime
 
     upt_time = root.find('.//Date')
@@ -220,13 +220,13 @@ def process_gcn(payload, root):
     det_event.append()
     table.flush()
     h5file.close()
-    
+
     '''PLOTTING'''
     #save the pie of possibilities
     specindex = np.argmax(vals)
-    
+
     fig1, ax1 = plt.subplots(figsize=(5,5))
-    ax1.pie(vals,labels=order,wedgeprops=dict(width=0.5),labeldistance=None)
+    ax1.pie(vals,labels=None,wedgeprops=dict(width=0.5))
     ax1.axis('equal')
 #    plt.text(0,0.1,'Type:',fontsize=20,transform=ax1.transAxes)
 #    plt.text(0,0,order[specindex],fontsize=20,transform=ax1.transAxes)
@@ -247,11 +247,11 @@ def process_gcn(payload, root):
     plt.savefig(params['GraceID']+'_pie.png')
     plt.close(fig1)
     t.join()
-    
-    
+
+
 #gcn.listen(host="209.208.78.170",handler=process_gcn)
-#        
-#        
+#
+#
 #testing
 #os.chdir('./event_data')
 #import lxml
