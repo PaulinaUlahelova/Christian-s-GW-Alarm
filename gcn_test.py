@@ -162,7 +162,10 @@ def process_gcn(payload, root):
         except:
             table=h5file.get_node("/events",params['GraceID'])
     else:
-        table = h5file.create_table(h5file.root.events,'EventSimulation',Event,'Simulation')
+        try:
+            table = h5file.create_table(h5file.root.events,'EventSimulation',Event,'Simulation')
+        except:
+            table=h5file.get_node("/events",'EventSimulation')
     det_event = table.row
     for key, value in params.items():
         #print(key, '=', value)
@@ -258,7 +261,6 @@ def process_gcn(payload, root):
     plt.savefig(params['GraceID']+'_pie.png')
     plt.close(fig1)
     t.join()
-
 
 #gcn.listen(host="209.208.78.170",handler=process_gcn)
 #
