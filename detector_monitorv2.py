@@ -35,9 +35,12 @@ def statusdetect():
         elif row[2] == 'Future addition':
             row[3] = 'N/A'
             statuses.append(3)
+        elif row[2] == 'Commissioning':
+            row[2] = 'Commission'
+            statuses.append(1)
         elif row[2] == 'Observing'or row[2] == 'Science':
             statuses.append(2)
-        elif row[2] == 'Down':
+        elif row[2] == 'Down' or row[2] == 'Info too old':
             statuses.append(0)
         else:
             statuses.append(1)
@@ -58,4 +61,4 @@ def statusdetect():
         temp=[row[0],row[2],row[3],toput]
         export.append(temp)
     export[0],export[2] = export[2],export[0]
-    return export,statuses
+    return export,statuses, names
