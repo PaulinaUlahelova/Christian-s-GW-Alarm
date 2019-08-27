@@ -85,9 +85,9 @@ else:
     pixels = None
     buzzPin= None
 
-#'''are we in the right folder? Preserves img functionality'''
-#if os.path.basename(os.getcwd()) == 'event_data':
-#    os.chdir('..')
+'''are we in the right folder? Preserves img functionality'''
+if os.path.basename(os.getcwd()) != 'event_data':
+    os.chdir('./event_data')
 
 class Event(IsDescription):
     AlertType=StringCol(30)
@@ -582,15 +582,15 @@ def plotupdate(obj):
             
 def notifier(event_type):
     if event_type == 'Terrestrial':
-        pixels[1] = (242,179,179)
+        pixels[1] = (255,80,70)
     elif event_type == 'NSBH':
-        pixels[1] = (238,242,179)
+        pixels[1] = (255,255,25)
     elif event_type == 'BBH':
-        pixels[1] = (202,214,235)
+        pixels[1] = (122,180,255)
     elif event_type == 'MassGap':
-        pixels[1] = (231,179,242)
+        pixels[1] = (226,130,245)
     elif event_type == 'BNS':
-        pixels[1] = (179,242,183)
+        pixels[1] = (102,255,112)
     pixels.show()
 
 class MainScreenv2(Screen):
