@@ -668,18 +668,11 @@ class MainScreenv2(Screen):
                     time.sleep(5)
                     pass      
                 
-                #parse the event data file for the most recent event to be loaded: that's the name
-                file = open("PreviousEventToRead.xml").read()
-                def search(line):
-                    result = re.search('<Param name="GraceID" dataType="string" value=(.*)ucd="meta.id">\n',
-                                       str(line))
-                    return result.group(1)
-                eventid = search(file)
+                tabs=[tab.name for tab in h5file.list_nodes("/events")]
+                eventid = list(reversed(sorted(tabs)))[0]
                 for tab in h5file.list_nodes("/events"):
-                    if str(tab.name) in eventid:
+                    if tab.name == eventid:
                         new_event_table=tab
-#                    if tab.name == eventid:
-#                        new_event_table = tab
                 namelist = new_event_table.colnames
                 new_event_row = new_event_table[-1]
                 orderedrow = []
@@ -802,20 +795,7 @@ class MyApp(App):
         print('Initialised application...')
         return sm
 
-#Spyder test functionality
-def reset():
-    print('i have been reset')
-    import kivy.core.window as window
-    from kivy.base import EventLoop
-    if not EventLoop.event_listeners:
-        from kivy.cache import Cache
-        window.Window = window.core_select_lib('window', window.window_impl, True)
-        Cache.print_usage()
-        for cat in Cache._categories:
-            Cache._objects[cat] = {}    
-
 if __name__ == '__main__':
-    reset()
     MyApp().run()
     main_flag = 1 
     Builder.unload_file("GWalarm.kv")
