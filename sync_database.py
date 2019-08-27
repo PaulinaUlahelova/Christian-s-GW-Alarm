@@ -14,7 +14,7 @@ def sync_database():
     import lxml
     import multiprocessing
     import sys
-    
+    import time
     sys.setrecursionlimit(100000)
     
     #Get old links by parsing properly, and download + save to file!
@@ -37,7 +37,6 @@ def sync_database():
     def hasstylenotclass(tag):
         return tag.has_attr('style') and not tag.has_attr('class')
     
-
     for col in soup.tbody.find_all("tr"):
         #print(row)
         #for col in row("tr"):
@@ -88,14 +87,13 @@ def sync_database():
     q = multiprocessing.Queue()
     pool = multiprocessing.Pool(len(eventlinks),process,(q,))
     for i,link in enumerate(eventlinks):
+        while q.qsize() > 20:
+            time.sleep(1)
         q.put([link,eventnames[i]])
-
     pool.close()
     pool.join()
-    print('rm files')
     
     for file in os.listdir():
         if 'ToRead' in file:
             os.remove(file)
-#    if i == 0:
-#        break
+#sync_database()
