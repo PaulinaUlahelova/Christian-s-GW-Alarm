@@ -258,7 +258,10 @@ def process_gcn(payload, root):
     plt.text(0,0.01,'Probability Distribution',fontsize=13,transform=ax1.transAxes)
 
     plt.tight_layout()
-    plt.savefig(params['GraceID']+'_pie.png')
+    if sim:  
+        plt.savefig('EventSimulation_pie.png')
+    else:
+        plt.savefig(params['GraceID']+'_pie.png')
     plt.close(fig1)
     t.join()
 

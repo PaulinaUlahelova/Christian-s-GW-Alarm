@@ -353,7 +353,7 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             
             print('Event History Updated...')
             
-            if pixels:
+            if pixels and winner:
                 type_notif(winner)
             h5file.close()
             #reset the flag
