@@ -614,7 +614,7 @@ def type_notif(e_type,flasher='off'):
         elif event_type == 'BBH':
             pixels[1] = (122,180,255)
         elif event_type == 'MassGap':
-            pixels[1] = (226,130,245)
+            pixels[1] = (245,66,230)
         elif event_type == 'BNS':
             pixels[1] = (102,255,112)
         pixels.show()
@@ -751,17 +751,16 @@ class MainScreenv2(Screen):
 
     def notifier(self):
         self.notif_light_var=1
-        rand1 = float("{0:.6f}".format(random.random()))
-        rand2 = float("{0:.6f}".format(random.random()))
-        rand3 = float("{0:.6f}".format(random.random()))
+        rand1 = round(random.random()*255)
+        rand2 = round(random.random()*255)
+        rand3 = round(random.random()*255)
                 
         while self.notif_light_var==1:
-            randtuple=tuple(255*x for x in (rand1,rand2,rand3))
-            pixels[0] = randtuple
+            pixels[0] = (rand1,rand2,rand3)
             pixels.show()
             time.sleep(0.05)
-            rand1+=2/255
-            rand2+=1.5/255
+            rand1+=3/255
+            rand2+=2/255
             rand3+=1/255
             if rand1 > 255:
                 rand1-=255
