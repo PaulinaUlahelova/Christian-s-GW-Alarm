@@ -678,7 +678,7 @@ class MainScreenv2(Screen):
                         buzzthread = threading.Thread(target=buzz,args=(3,))
                         buzzthread.start()
                     if pixels:
-                        notifthread = threading.Thread(target=notifier)
+                        notifthread = threading.Thread(target=self.notifier)
                         notifthread.start()
                     print('New event has been detected!!')
                     break
