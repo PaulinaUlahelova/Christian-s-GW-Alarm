@@ -629,6 +629,7 @@ def type_notif(e_type,flasher='off'):
             pixels.show()
             time.sleep(step)
             j+=step
+        color(e_type)
     else:
         color(e_type)  
             
