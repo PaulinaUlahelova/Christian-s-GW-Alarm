@@ -734,7 +734,8 @@ class MainScreenv2(Screen):
                 for name in lookoutfor:
                     stats.append(float(new_event_row[name].decode().strip('%')))
                 winner = lookoutfor[np.argmax(stats)]
-                type_notif(winner,flasher='on')
+                t = threading.Thread(target=type_notif,args=(winner,'on'))
+                t.start()
                 
             if  eventid == 'EventSimulation':
                 h5file.remove_node("/events",'EventSimulation')
@@ -758,7 +759,7 @@ class MainScreenv2(Screen):
         while self.notif_light_var==1:
             pixels[0] = (rand1,rand2,rand3)
             pixels.show()
-            time.sleep(0.05)
+            time.sleep(0.005)
             rand1+=3
             rand2+=2
             rand3+=1
