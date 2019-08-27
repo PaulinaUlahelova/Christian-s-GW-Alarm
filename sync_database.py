@@ -99,4 +99,3 @@ def sync_database():
             os.remove(file)
 #    if i == 0:
 #        break
-sync_database()
