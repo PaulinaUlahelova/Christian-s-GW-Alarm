@@ -734,7 +734,7 @@ class MainScreenv2(Screen):
                 for name in lookoutfor:
                     stats.append(float(new_event_row[name].decode().strip('%')))
                 winner = lookoutfor[np.argmax(stats)]
-                type_notif(winner)
+                type_notif(winner,flasher='on')
                 
             if  eventid == 'EventSimulation':
                 h5file.remove_node("/events",'EventSimulation')
@@ -759,9 +759,9 @@ class MainScreenv2(Screen):
             pixels[0] = (rand1,rand2,rand3)
             pixels.show()
             time.sleep(0.05)
-            rand1+=3/255
-            rand2+=2/255
-            rand3+=1/255
+            rand1+=3
+            rand2+=2
+            rand3+=1
             if rand1 > 255:
                 rand1-=255
             if rand2 > 255:
