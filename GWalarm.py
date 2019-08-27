@@ -62,9 +62,9 @@ if os.uname()[4][:3] == 'arm':
     GPIO.setup(testPin,GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
     GPIO.output(buzzPin,GPIO.LOW)
     
-    '''test if hardware is present'''
+    '''test if hardware is present - shows buzzer volume to user'''
     GPIO.output(buzzPin,GPIO.HIGH)
-    time.sleep(0.01)
+    time.sleep(0.5)
     if GPIO.input(testPin):
         GPIO.output(buzzPin,GPIO.LOW)
         import board
@@ -76,12 +76,12 @@ if os.uname()[4][:3] == 'arm':
         
     else:
         GPIO.output(buzzPin,GPIO.LOW)
-        print('No hardware detected.')
+        print('No hardware detected - the hardware is not present.')
         GPIO.cleanup()
         pixels = None
         buzzPin= None
 else:
-    print('No hardware detected.')
+    print('No hardware detected - not on RPi.')
     pixels = None
     buzzPin= None
 
@@ -328,12 +328,12 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                         global newevent_flag
                         newevent_flag=1
                 
-                for i in range(len(specialnames)):
+                for j in range(len(specialnames)):
                     string=row[specialnames[i]]
                     if specialnames[i] == 'Distance':
-                        to_add_to_data['text'+str(i)] = string.decode().replace('+-',u'\xb1')
+                        to_add_to_data['text'+str(j)] = string.decode().replace('+-',u'\xb1')
                     else:
-                        to_add_to_data['text'+str(i)] = string.decode() 
+                        to_add_to_data['text'+str(j)] = string.decode() 
                 stats = []
                 for name in lookoutfor:
                     stats.append(float(row[name].decode().strip('%')))
@@ -462,16 +462,16 @@ def statusupdate(obj):
             for i,stat in enumerate(stats):
                 if stat == 0:
                     #red
-                    pixels[i] = (255,0,0)
+                    pixels[i+2] = (255,0,0)
                 if stat == 1:
                     #orange
-                    pixels[i] = (228,119,10) 
+                    pixels[i+2] = (228,119,10) 
                 if stat == 2:
                     #green
-                    pixels[i] = (17,221,17)
+                    pixels[i+2] = (17,221,17)
                 if stat == 3:
                     #yellow
-                    pixels[i] = (0,0,0)
+                    pixels[i+2] = (0,0,0)
             pixels.show()
         
         waittime = 30
@@ -819,3 +819,5 @@ if __name__ == '__main__':
     MyApp().run()
     main_flag = 1 
     Builder.unload_file("GWalarm.kv")
+    if pixels:
+        GPIO.cleanup()
