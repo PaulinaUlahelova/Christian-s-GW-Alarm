@@ -71,7 +71,7 @@ if os.uname()[4][:3] == 'arm':
         import neopixel
         neoPin = board.D12
         num_leds = 8
-        pixels = neopixel.NeoPixel(neoPin,num_leds,auto_write=False)
+        pixels = neopixel.NeoPixel(neoPin,num_leds,pixel_order=neopixel.RGB,auto_write=False)
         print('Hardware has been detected. Enabling...')
         
     else:
@@ -85,9 +85,9 @@ else:
     pixels = None
     buzzPin= None
 
-'''are we in the right folder? Preserves img functionality'''
-if os.path.basename(os.getcwd()) == 'event_data':
-    os.chdir('..')
+#'''are we in the right folder? Preserves img functionality'''
+#if os.path.basename(os.getcwd()) == 'event_data':
+#    os.chdir('..')
 
 class Event(IsDescription):
     AlertType=StringCol(30)
@@ -329,8 +329,8 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                         newevent_flag=1
                 
                 for j in range(len(specialnames)):
-                    string=row[specialnames[i]]
-                    if specialnames[i] == 'Distance':
+                    string=row[specialnames[j]]
+                    if specialnames[j] == 'Distance':
                         to_add_to_data['text'+str(j)] = string.decode().replace('+-',u'\xb1')
                     else:
                         to_add_to_data['text'+str(j)] = string.decode() 
