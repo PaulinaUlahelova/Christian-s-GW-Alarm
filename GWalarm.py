@@ -628,6 +628,7 @@ def type_notif(e_type,flasher='off'):
             pixels[1]=(0,0,0)
             pixels.show()
             time.sleep(step)
+            j+=step
     else:
         color(e_type)  
             
@@ -750,9 +751,9 @@ class MainScreenv2(Screen):
 
     def notifier(self):
         self.notif_light_var=1
-        rand1 = "{0:.6f}".format(random.random())
-        rand2 = "{0:.6f}".format(random.random())
-        rand3 = "{0:.6f}".format(random.random())
+        rand1 = float("{0:.6f}".format(random.random()))
+        rand2 = float("{0:.6f}".format(random.random()))
+        rand3 = float("{0:.6f}".format(random.random()))
                 
         while self.notif_light_var==1:
             randtuple=tuple(255*x for x in (rand1,rand2,rand3))
@@ -762,6 +763,12 @@ class MainScreenv2(Screen):
             rand1+=2/255
             rand2+=1.5/255
             rand3+=1/255
+            if rand1 > 255:
+                rand1-=255
+            if rand2 > 255:
+                rand2 -= 255
+            if rand3 > 255:
+                rand3 -= 255
             
         pixels[0] = (0,0,0)
         pixels.show()
