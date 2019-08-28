@@ -727,7 +727,7 @@ class VolSlider(BoxLayout):
     def changevol(self,value):
         val = self.ids.slider.value
         if pixels:
-            os.system("amixer set Master "+str(val)+"%")
+            os.system("amixer set PCM "+str(val)+"%")
 
 
 class MainScreenv2(Screen):
