@@ -35,6 +35,7 @@ from kivy.uix.recycleview import RecycleView
 from kivy.uix.behaviors  import ButtonBehavior, ToggleButtonBehavior
 from kivy.uix.modalview import ModalView
 from kivy.animation import Animation
+from kivy.uix.slider import Slider
 from kivy.lang.builder import Builder
 
 from detector_monitorv2 import statusdetect
@@ -52,6 +53,9 @@ from matplotlib.image import imread
 from matplotlib.pyplot import imsave
 import random
 import lxml
+import math
+import scipy.constants
+
 
 '''CHECK IF ON RASPBERRY PI FOR GPIO FUNCTIONALITY'''
 if os.uname()[4][:3] == 'arm':
@@ -86,6 +90,13 @@ else:
     print('No hardware detected - not on RPi.')
     pixels = None
     buzzPin= None
+
+'''TEXT TO SPEECH INIT'''
+#import pyttsx3
+#engine = pyttsx3.init()
+#engine.setProperty('voice','english-north')
+#engine.setProperty('rate',130)
+from gtts import gTTS
 
 Builder.unload_file("GWalarm.kv")
 Builder.load_file('GWalarm.kv')
@@ -226,9 +237,60 @@ class HistoryScreenv2(Screen):
         confirm = Popup(title='Are you sure?',content=content,size_hint=(0.4,0.4))
         confirm.open()
         
+        
+def oom_to_words(inputval,unit,tts='off'):
+    far_oom = int(math.log10(inputval))
+    far_token = ''
+    inputval = float("{0:.2f}".format(inputval))
+    if tts == 'on':
+        inputval = float("{0:.0f}".format(inputval))
+        if far_oom > 2 and far_oom <= 3:
+            far_token = 'Hundred'
+        elif far_oom > 3 and far_oom <= 6:
+            far_token='Thousand'
+    
+    if far_oom > 6 and far_oom <= 9:
+        far_token = 'Million'
+    elif far_oom > 9 and far_oom <= 12:
+        far_token = 'Billion'
+    elif far_oom > 12 and far_oom <= 15:
+        far_token='Trillion'
+    elif far_oom > 15 and far_oom <= 18:
+        far_token ='Quadrillion'
+    elif far_oom > 18 and far_oom <= 21:
+        far_token = 'Quintillion'
+    elif far_oom > 21 and far_oom <= 24:
+        far_token = 'Sextillion'
+    elif far_oom > 24:
+        far_token = 'Septillion'
+    far_token+= ' '+unit
+    far_rem_oom = far_oom % 3
+    far_div_oom = far_oom - far_rem_oom
+#    print(inputval/(10**far_div_oom) + far_token)
+    if tts=='on':
+        return_string = str(int(float("{0:.2f}".format(inputval/(10**far_div_oom))))) +' '+ far_token 
+    else:
+        return_string = str(float("{0:.2f}".format(inputval/(10**far_div_oom)))) +' '+ far_token 
+    return return_string
+
+def process_FAR(FAR,tts='off'):
+    per_yr = FAR*scipy.constants.year
+    if per_yr <= 1:
+        oneinyr = 1/per_yr
+    else:
+        oneinyr = per_yr
+#    if len(str(oneinyr).split('.')[0]) >= 5 or 'e' in str(oneinyr):
+#        val = "One every "+str("{0:.2e}".format(oneinyr))+" yrs"
+#    else:
+#        val = "One every "+str("{0:.3f}".format(oneinyr))+" yrs"
+        
+    val = 'One every ' + oom_to_words(oneinyr,'years',tts)
+    return val
+    
 def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending',led_init = False):
     print('Begin History update')
     '''An important function that is responsible for populating and repopulating the history screen.'''
+    
     global flag
     global main_flag
     #reset stop flag
@@ -280,7 +342,6 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             widgetids = []
             if rv.data:
                 nomlist = rv.data[0]['namelist']
-                print(nomlist)
                 idindex = nomlist.index('GraceID')
                 widgetids= [elem['row'][idindex] for elem in rv.data]
             
@@ -295,7 +356,7 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                     string = str(row['GraceID'].decode())
                     sort_vars.append(int(re.sub("[a-zA-Z]","",string)))
                 elif 'FAR' in sorttype:
-                    sort_vars.append(float(row['FAR'].decode().split()[2]))
+                    sort_vars.append(float(row['FAR'].decode()))#.split()[2]))
                 elif 'Instruments' in sorttype:
                     sort_vars.append(row['Instruments'].decode())
             if sort_vars != []:
@@ -325,11 +386,15 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                 to_add_to_data['namelist']=names
                 to_add_to_data['name']=row['GraceID'].decode()
                 for key in names:
-                    orderedrow.append(row[key].decode())
+                    if key == 'FAR':
+                        val = process_FAR(float(row[key].decode()))
+                        orderedrow.append(val)
+                    else:       
+                        orderedrow.append(row[key].decode())
                 to_add_to_data['row'] = orderedrow
                 if row['GraceID'].decode() not in widgetids:
                     if first == 0:
-                        if row['AlertType'].decode() == 'Preliminary':
+                        if row['Revision'].decode() == '1':
                             '''NEW EVENT!!!'''
                             global newevent_flag
                             if newevent_flag == 0:
@@ -339,6 +404,8 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                     string=row[specialnames[j]]
                     if specialnames[j] == 'Distance':
                         to_add_to_data['text'+str(j)] = string.decode().replace('+-',u'\xb1')
+                    elif specialnames[j] == 'FAR':
+                        to_add_to_data['text'+str(j)] = process_FAR(float(string.decode()))
                     else:
                         to_add_to_data['text'+str(j)] = string.decode() 
                 stats = []
@@ -374,18 +441,27 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
 
 class DevPop(ModalView):
     def simulate(self):
-        self.dismiss()
-        def process():
-            payload=open("EventDemonstration.xml",'rb').read()
-            string='Thisisaneventsim'
-            root=lxml.etree.fromstring(payload)
-            payload+=string.encode()
-            process_gcn(payload,root)
-            global newevent_flag
-            newevent_flag=1
-        t = threading.Thread(target=process)
-        t.start()
-        
+        global newevent_flag
+        if newevent_flag == 0:
+            #don't start if it's not safe
+            self.dismiss()
+            
+            def process():
+                payload=open("EventDemonstration.xml",'rb').read()
+                string='Thisisaneventsim'
+                root=lxml.etree.fromstring(payload)
+                payload+=string.encode()
+                process_gcn(payload,root)
+                global newevent_flag
+                newevent_flag=1
+                
+            t = threading.Thread(target=process)
+            t.start()
+        else:
+            content = Label(text='The event is coming, be patient!')
+            popu = Popup(title="It's on the way...",content=content)
+            popu.open()
+            Clock.schedule_interval(lambda dt: popu.dismiss(),5)
 
 class InfoPop(ModalView):
     namelist=ObjectProperty()
@@ -625,7 +701,7 @@ def type_notif(e_type,flasher='off'):
     else:
         color(e_type)  
             
-def buzz(times):
+def buzz(times,step):
     i=0
     while i < times:
         GPIO.output(buzzPin,GPIO.HIGH)
@@ -643,9 +719,15 @@ def buzz(times):
         GPIO.output(buzzPin,GPIO.HIGH)
         time.sleep(0.1)
         GPIO.output(buzzPin,GPIO.LOW)
-        time.sleep(0.05)   
-
         i+=1
+        time.sleep(step)
+
+
+class VolSlider(BoxLayout):
+    def changevol(self,value):
+        val = self.ids.slider.value
+        if pixels:
+            os.system("amixer set Master "+str(val)+"%")
 
 
 class MainScreenv2(Screen):
@@ -669,7 +751,7 @@ class MainScreenv2(Screen):
                 if newevent_flag == 1:
                     #skip a level up to execute the rest of the loop, then back to waiting.
                     if buzzPin is not None:
-                        buzzthread = threading.Thread(target=buzz,args=(3,))
+                        buzzthread = threading.Thread(target=buzz,args=(3,1))
                         buzzthread.start()
                     if pixels:
                         notifthread = threading.Thread(target=self.notifier)
@@ -720,25 +802,30 @@ class MainScreenv2(Screen):
             orderedrow = []
             for key in namelist:
                 orderedrow.append(new_event_row[key].decode())
-                
+            name_row_dict = dict(zip(namelist,orderedrow))
+            
+            stats = []
+            lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
+            for name in lookoutfor:
+                stats.append(float(new_event_row[name].decode().strip('%')))
+            winner = lookoutfor[np.argmax(stats)]
             if pixels:
-                stats = []
-                lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
-                for name in lookoutfor:
-                    stats.append(float(new_event_row[name].decode().strip('%')))
-                winner = lookoutfor[np.argmax(stats)]
                 t = threading.Thread(target=type_notif,args=(winner,'on'))
                 t.start()
                 
+            speech_thread  = threading.Thread(target=self.read_event_params,args=(name_row_dict,winner))
+            speech_thread.start()
+
             if  eventid == 'EventSimulation':
                 h5file.remove_node("/events",'EventSimulation')
             h5file.close()
             
             newevent_flag=0
-
+    
             pop = InfoPop(namelist=namelist,row=orderedrow)
             extralabel = Label(text='[b]NEW EVENT[/b]',markup=True,font_size=20,halign='left',color=[0,0,0,1],size_hint_x=0.2)
             pop.ids.header.add_widget(extralabel)
+            #pop.bind(on_dismiss=lambda dt:)
             if pixels:
                 pop.ids.but1.bind(on_press=self.notif_off)
                 pop.ids.but2.bind(on_press=self.notif_off)
@@ -769,6 +856,64 @@ class MainScreenv2(Screen):
     
     def notif_off(self,instance):
         self.notif_light_var = 0
+    
+    def read_event_params(self,paramdict,ev_type):
+        if ev_type == 'Terrestrial':
+            processType = 'False Alarm'
+        elif ev_type == 'BNS':
+            processType = 'Binary Neutron Star merger'
+        elif ev_type == 'BBH':
+            processType = 'Binary Black Hole merger'
+        elif ev_type == 'MassGap':
+            processType = 'MassGap event'
+        elif ev_type == 'NSBH':
+            processType = 'Neutron Star Black Hole merger'
+            
+        far = float(paramdict['FAR'])
+        
+        dist = float(paramdict['Distance'].split()[0])
+        distly = dist*3.262e+6
+        
+        insts = paramdict['Instruments']
+        insts_out =''
+        if 'V1' in insts:
+            insts_out+='Virgo, '
+        if 'L1' in insts:
+            insts_out+='LIGO Livingston, '
+        if 'H1' in insts:
+            insts_out+='LIGO Hanford, '
+        processed = insts_out.split(',')[0:-1]
+        insts_formed = ''
+        for i,elem in enumerate(processed):
+            if i == len(processed)-1 and len(processed) != 1:
+                insts_formed+= ' and '+ elem
+            else:
+                insts_formed+= elem
+        
+        InitialToken = 'A new event has been detected by '+insts_formed+' . '
+        EventTypeToken = 'The event is most likely to be a ' + processType + ', with a probability of ' + "{0:.0f}".format(float(paramdict[ev_type][:-1])-1) + ' percent. '
+        FalseAlarmToken = 'The false alarm rate of the event is ' + process_FAR(far,tts='on') +'. '
+        DistanceLookBackToken = 'It is approximately ' + oom_to_words(dist,'Megaparsecs',tts='on') + ' away, which is equivalent to a lookback time of '+ oom_to_words(distly,'years',tts='on')+'. '
+    
+        tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken]
+        renderthreads = []
+        def render_audio(token,num):
+            print(token)
+            tts=gTTS(token)
+            tts.save('readout'+num+'.mp3')
+            
+        for k,token in enumerate(tokens):
+#            engine.say(token)
+#            engine.runAndWait()
+            t=threading.Thread(target=render_audio,args=(token,str(k)))
+            renderthreads.append(t)
+            t.start()
+        for t in renderthreads:
+            t.join()
+        maximum = k
+        for i in range(maximum+1):
+            print(i)
+            os.system("mpg321 --stereo readout"+str(i)+".mp3")
         
 class StatusScreenv2(Screen):
     det1props = ListProperty()
@@ -844,7 +989,18 @@ class MyApp(App):
         now = time.time()
         last_backup =float(config.get('Section','PeriodicBackup'))
         print('It has been '+ str((now - last_backup)/86400) + ' days since the last backup')
-        if now-last_backup > 86400:
+        
+        if os.path.basename(os.getcwd()) != "event_data":
+            dir_to_search = "event_data"
+        else:
+            dir_to_search=None
+        if 'Event Database' not in os.listdir(dir_to_search):
+            print('Event file not found.')
+            file_presence = 0
+        else:
+            file_presence = 1
+
+        if now-last_backup > 86400 or file_presence == 0:
             print('Performing Periodic Event Sync. Please be patient - this may take a while...')
             sync_database()
             config.set('Section','PeriodicBackup',now)

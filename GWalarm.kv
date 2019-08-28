@@ -65,18 +65,22 @@
             keep_ratio:False
             
 <DevPop>:
-    size_hint:0.6,0.6
+    size_hint:0.8,0.7
     TabbedPanel:
         do_default_tab:False
+        tab_width:root.width/2
         TabbedPanelItem:
             text: 'Team info!'
             Label:
                 text:'To be replaced...'
         TabbedPanelItem:
-            text: 'Event simulation'
-            Button:
-                text: 'Send an event trigger and \nsee what happens...'
-                on_press:root.simulate()
+            text: 'Event Simulation'
+            BoxLayout:
+                padding:root.width/6,root.height/6
+                Button:
+                    text: 'Send an event trigger and \nsee what happens...'
+                    halign:'center'
+                    on_press:root.simulate()
 <DeveloperAboutButton@ButtonBehavior+BoxLayout>:
     img1:'./IGR.jpg'
     img2:'./UofG.jpg'
@@ -108,6 +112,42 @@
     Image:
         source:root.img1
         size_hint_x:0.15
+        
+
+<VolSlider>:
+    orientation:'vertical'
+    Slider:
+        id:slider
+        on_value:root.changevol(self.value)
+        size_hint:1,0.75
+        min:0
+        max:100
+        value:50
+    
+    GridLayout:
+        cols:3
+        padding: 10,0
+        Label:
+            size_hint:0.1,0.25
+            font_size:dp(12)
+            text:'0'
+            color:0,0,0,1
+            valign:'top'
+            halign:'center'
+        Label:
+            size_hint:0.8,0.25
+            text:'[b]Speaker\nVolume[/b]'
+            markup:True
+            color:0,0,0,1
+            font_size:dp(12)
+            line_height:0.95
+        Label:
+            size_hint:0.1,0.25
+            text:'100'
+            color:0,0,0,1
+            font_size:dp(12)
+            valign:'top'
+            halign:'center'
 
 <MainScreenv2@Screen>:
     notif_light_var:0
@@ -186,8 +226,9 @@
                     Line:
                         width:2
                         points: self.x, self.y+self.height+5, self.x+self.width, self.y+self.height+5
-            Label:
+            VolSlider:
                 size_hint_x:0.3
+                padding:5,5
                 canvas.after:
                     Color:
                         rgba: 0,0,0,1
@@ -773,8 +814,8 @@
     part2info:['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision']
     part3info:['BBH','BNS','NSBH','MassGap','Terrestrial']
     
-    namelist: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS']
-    row: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS']
+    namelist: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS','skymap']
+    row: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS','skymap']
     rowdict:dict(zip(self.namelist,self.row))
     
     background_color: [.2,.2,.4,1]
