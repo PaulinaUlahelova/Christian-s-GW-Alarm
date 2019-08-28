@@ -168,7 +168,7 @@ def process_gcn(payload, root):
             table=h5file.get_node("/events",'EventSimulation')
     det_event = table.row
     for key, value in params.items():
-        #print(key, '=', value)
+ #       print(key, '=', value)
         if key == 'FAR':
             per_yr = float(value)*scipy.constants.year
             if per_yr <= 1:
@@ -181,7 +181,7 @@ def process_gcn(payload, root):
                 val = "One every "+str("{0:.3f}".format(oneinyr))+" yrs"
             det_event[key] = val
             descriptions[key]=descs[i]
-        elif key == 'Pkt_Ser_Num':
+        if key == 'Pkt_Ser_Num':
             key = 'Revision'
             det_event[key] = value
             descriptions[key] = descs[i]
@@ -223,7 +223,7 @@ def process_gcn(payload, root):
     det_formtime = one+' at '+two
 
     det_event['DetectionTime']=det_formtime
-
+    
     upt_time = root.find('.//Date')
     upt_text = upt_time.text
     [one1,two1] = upt_text.split('T')
@@ -271,6 +271,6 @@ def process_gcn(payload, root):
 #testing
 #os.chdir('./event_data')
 #import lxml
-#payload = open('PreviousEventToRead.xml', 'rb').read()
+#payload = open('S190828l-1-Preliminary.xml', 'rb').read()
 #root = lxml.etree.fromstring(payload)
 #process_gcn(payload, root)
