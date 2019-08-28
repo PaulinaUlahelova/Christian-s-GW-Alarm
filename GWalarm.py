@@ -227,7 +227,7 @@ class HistoryScreenv2(Screen):
         confirm.open()
         
 def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending',led_init = False):
-    print('begin hist update')
+    print('Begin History update')
     '''An important function that is responsible for populating and repopulating the history screen.'''
     global flag
     global main_flag
@@ -278,8 +278,11 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             sort_vars = []
             
             widgetids = []
-            for child in rv.data:
-                widgetids.append(child['name'])
+            if rv.data:
+                nomlist = rv.data[0]['namelist']
+                print(nomlist)
+                idindex = nomlist.index('GraceID')
+                widgetids= [elem['row'][idindex] for elem in rv.data]
             
             '''Iterate through all events, re-drawing row-by-row the history viewer'''
             for table in tables:
@@ -324,11 +327,9 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                 for key in names:
                     orderedrow.append(row[key].decode())
                 to_add_to_data['row'] = orderedrow
-                    
                 if row['GraceID'].decode() not in widgetids:
                     if first == 0:
-                        if row['AlertType'] == 'Preliminary':
-                            '''LAZY SOLUTION - NOT VERY FUTUREPROOF''' #FIXME
+                        if row['AlertType'].decode() == 'Preliminary':
                             '''NEW EVENT!!!'''
                             global newevent_flag
                             if newevent_flag == 0:
@@ -347,14 +348,13 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                 new_data.append(to_add_to_data)
                 
                 if i == 0 and sorttype == 'Time Descending':
-                    winner = lookoutfor[np.argmax(stats)]
+                    rv.winner = lookoutfor[np.argmax(stats)]
                 
             rv.data = new_data
             
             print('Event History Updated...')
-            
-            if pixels and winner:
-                type_notif(winner)
+            if pixels:
+                type_notif(rv.winner)
             h5file.close()
             #reset the flag
             first = 0
@@ -363,7 +363,7 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
         i=0
         while i < waittime:
             if flag ==1:
-                print('his_thread restart')
+                print('History Thread restarting...')
                 flag=0
                 return
             if main_flag ==1:
@@ -372,15 +372,7 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             i+=0.2
             time.sleep(0.2)
 
-
-class HeadingLabel(ToggleButtonBehavior,Label):
-    def on_state(self,widget,value):
-        if value == 'down':
-            print('down')
-        else:
-            print('up')
-
-class DevPop(Popup):
+class DevPop(ModalView):
     def simulate(self):
         self.dismiss()
         def process():
@@ -503,7 +495,7 @@ def statusupdate(obj):
         i = 0
         while i < waittime:
             if main_flag == 1:
-                print('statusthread closing...')
+                print('Status Thread closing...')
                 return
             i+=1
             time.sleep(1)
@@ -599,7 +591,7 @@ def plotupdate(obj):
         i=0
         while i < waittime:
             if main_flag == 1:
-                print('plotthread closing...')
+                print('Plot Thread closing...')
                 return
             i+=5
             time.sleep(5)
@@ -741,6 +733,7 @@ class MainScreenv2(Screen):
             if  eventid == 'EventSimulation':
                 h5file.remove_node("/events",'EventSimulation')
             h5file.close()
+            
             newevent_flag=0
 
             pop = InfoPop(namelist=namelist,row=orderedrow)
