@@ -753,12 +753,13 @@
                         width: 1
                         points: [self.x+self.width, self.y+self.height, self.x+self.width,self.y]
 
-            HisScreenButton:
-                text:'Main Menu'
-                on_press:
-                    root.manager.transition=SlideTransition(direction='right')
-                    root.manager.current = 'main'
-                 
+#            HisScreenButton:
+#                text:'Main Menu'
+#                on_press:
+#                    root.manager.transition=SlideTransition(direction='left')
+#                    root.manager.current = 'main'
+            EventContainer:
+                                 
 
 <EventInfoSubHeader@GridLayout>:
     top_text:'test'
@@ -1191,10 +1192,10 @@
     text3:'tobereplaced'
     text4:'tobereplaced'
     text5:'tobereplaced'
-    row:
+    row:['Initial', '100.000%', '<0.1%', '2019-04-08 at 18:18:02', '1472.901 +- 357.875 Mpc', 'One every 11.28 Billion years', 'S190408an', 'CBC', '< 0.1%', '12.00%', 'H1,L1,V1', '<0.1%', '<0.1%', '2', '<0.1%', '2019-04-08 at 20:21:42', 'S190408an.png']
     pop:
     img:
-    namelist:
+    namelist: ['AlertType', 'BBH', 'BNS', 'DetectionTime', 'Distance', 'FAR', 'GraceID', 'Group', 'HasNS', 'HasRemnant', 'Instruments', 'MassGap', 'NSBH', 'Revision', 'Terrestrial', 'UpdateTime', 'skymap']
     bgcol: 0.9,0.9,0.9,1
     on_press:self.details()
     canvas.before:
