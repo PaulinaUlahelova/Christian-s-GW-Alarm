@@ -776,11 +776,22 @@
         size_hint_y:0.7
         text_size:root.width,None
 
-<EventInfoHeader@GridLayout>:
-    cols:3
+<SpeakerButton@ButtonBehavior+Label>:
+    canvas:
+        Rectangle:
+            pos:self.pos
+            size:self.size
+            source: './Loudspeaker.png'
+
+
+<EventInfoHeader>:
+    cols:4
     graceid:'torep'
     revision:'1'
     color:0,0,0,1
+    paramdict:
+    var:'0'
+    speaker_color:0,0,0,0
     canvas.before:
         Color:
             rgba: 0.9,0.9,0.9,1
@@ -796,7 +807,25 @@
         top_text:'Revision'
         bottom_text: root.revision
         color:root.color
-        size_hint_x:0.4
+        size_hint_x:0.3
+    BoxLayout:
+        padding:3,3
+        size_hint_x:0.08
+        SpeakerButton:
+            on_press:root.read_aloud()
+            on_release:root.speaker_back()
+            canvas.after:
+                Color:
+                    rgba:0,0,0,1
+                Line:
+                    width:1
+                    rectangle:self.x,self.y,self.width,self.height
+                Color:
+                    rgba:root.speaker_color or [0,0,0,0]
+                Rectangle:
+                    pos:self.pos
+                    size:self.size
+    
             
 <InfoLabel@Label>:
     bg_col:(0,0,0,0)
@@ -813,7 +842,7 @@
     part1info:['HasRemnant','HasNS']
     part2info:['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision']
     part3info:['BBH','BNS','NSBH','MassGap','Terrestrial']
-    
+    var:'0'
     namelist: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS','skymap']
     row: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS','skymap']
     rowdict:dict(zip(self.namelist,self.row))
@@ -843,9 +872,11 @@
                 orientation:'vertical'
                 EventInfoHeader:
                     id:header
+                    var:root.var
                     color:0,0,0,1
                     graceid:root.rowdict['GraceID']
                     revision:root.rowdict['Revision']
+                    paramdict:root.rowdict
             GridLayout:
                 cols:3
                 size_hint_y:0.87

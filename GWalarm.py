@@ -168,6 +168,84 @@ class HisColLabel(ToggleButtonBehavior,Label):
                                                          self.backcolors,self.newsort),daemon=True)
         t2.start()
 
+class EventInfoHeader(GridLayout):
+    paramdict=ObjectProperty()
+    var=StringProperty('0')
+    speaker_color=ObjectProperty()
+    
+    def read_event_params(self):
+        stats = []
+        lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
+        for name in lookoutfor:
+            stats.append(float(self.paramdict[name].strip('%')))
+        ev_type= lookoutfor[np.argmax(stats)]
+
+        if ev_type == 'Terrestrial':
+            processType = 'False Alarm'
+        elif ev_type == 'BNS':
+            processType = 'Binary Neutron Star merger'
+        elif ev_type == 'BBH':
+            processType = 'Binary Black Hole merger'
+        elif ev_type == 'MassGap':
+            processType = 'MassGap event'
+        elif ev_type == 'NSBH':
+            processType = 'Neutron Star Black Hole merger'
+            
+        far = self.paramdict['FAR'].split()
+        far[2] = "{0:.0f}".format(float(far[2]))
+        far = " ".join(far)
+        
+        dist = float(self.paramdict['Distance'].split()[0])
+        distly = dist*3.262e+6
+        
+        insts = self.paramdict['Instruments']
+        insts_out =''
+        if 'V1' in insts:
+            insts_out+='Virgo, '
+        if 'L1' in insts:
+            insts_out+='LIGO Livingston, '
+        if 'H1' in insts:
+            insts_out+='LIGO Hanford, '
+        processed = insts_out.split(',')[0:-1]
+        insts_formed = ''
+        for i,elem in enumerate(processed):
+            if i == len(processed)-1 and len(processed) != 1:
+                insts_formed+= ' and '+ elem
+            else:
+                insts_formed+= elem
+        InitialToken = 'This event was detected by '+insts_formed+' . '
+        EventTypeToken = 'The event is most likely to be a ' + processType + ', with a probability of ' + "{0:.0f}".format(float(self.paramdict[ev_type][:-1])-1) + ' percent. '
+        FalseAlarmToken = 'The false alarm rate of the event is ' + far +'. '
+        DistanceLookBackToken = 'It is approximately ' + oom_to_words(dist,'Megaparsecs',tts='on') + ' away, which is equivalent to a lookback time of '+ oom_to_words(distly,'years',tts='on')+'. '
+    
+        tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken]
+        renderthreads = []
+        def render_audio(token,num):
+            print(token)
+            tts=gTTS(token)
+            tts.save('readout'+num+'.mp3')
+            
+        for k,token in enumerate(tokens):
+#            engine.say(token)
+#            engine.runAndWait()
+            t=threading.Thread(target=render_audio,args=(token,str(k)))
+            renderthreads.append(t)
+            t.start()
+        for t in renderthreads:
+            t.join()
+        maximum = k
+        print(self.var)
+        for i in range(maximum+1):
+            if self.var == '0':
+                os.system("mpg321 --stereo readout"+str(i)+".mp3")
+    def read_aloud(self):
+        self.speaker_color=[0.8,0.8,0.8,0.4]
+        t=threading.Thread(target=self.read_event_params)
+        t.start()
+    def speaker_back(self):
+        self.speaker_color=[0,0,0,0]
+        
+
 class HistoryScreenv2(Screen):
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
@@ -243,25 +321,22 @@ def oom_to_words(inputval,unit,tts='off'):
     far_token = ''
     inputval = float("{0:.2f}".format(inputval))
     if tts == 'on':
-        inputval = float("{0:.0f}".format(inputval))
-        if far_oom > 2 and far_oom <= 3:
-            far_token = 'Hundred'
-        elif far_oom > 3 and far_oom <= 6:
-            far_token='Thousand'
-    
-    if far_oom > 6 and far_oom <= 9:
+        if far_oom >= 3 and far_oom < 6:
+            far_token = 'Thousand'
+        inputval = round(inputval/10**far_oom)*10**far_oom
+    if far_oom >= 6 and far_oom < 9:
         far_token = 'Million'
-    elif far_oom > 9 and far_oom <= 12:
+    elif far_oom >= 9 and far_oom < 12:
         far_token = 'Billion'
-    elif far_oom > 12 and far_oom <= 15:
+    elif far_oom >= 12 and far_oom < 15:
         far_token='Trillion'
-    elif far_oom > 15 and far_oom <= 18:
+    elif far_oom >= 15 and far_oom < 18:
         far_token ='Quadrillion'
-    elif far_oom > 18 and far_oom <= 21:
+    elif far_oom >= 18 and far_oom < 21:
         far_token = 'Quintillion'
-    elif far_oom > 21 and far_oom <= 24:
+    elif far_oom >= 21 and far_oom < 24:
         far_token = 'Sextillion'
-    elif far_oom > 24:
+    elif far_oom >= 24:
         far_token = 'Septillion'
     far_token+= ' '+unit
     far_rem_oom = far_oom % 3
@@ -498,11 +573,14 @@ class InfoPop(ModalView):
         pop = Popup(title='Glossary',content=content,size_hint=(0.25,1),pos_hint={'x':0,'y':0})
         but.bind(on_press=pop.dismiss)
         pop.open()
-        
+    
+    def on_open(self):
+        self.var = '0'
     def on_dismiss(self):
         Clock.schedule_once(lambda dt: self.fin_dismiss(),0.25)
     def fin_dismiss(self):
             self.ids.caro.index=0
+            self.var = '1'
         
 class GlossDefLabel(Label):
     nom=ObjectProperty()
@@ -1025,3 +1103,6 @@ if __name__ == '__main__':
     Builder.unload_file("GWalarm.kv")
     if pixels:
         GPIO.cleanup()
+    time.sleep(10)
+    print('KeyboardInterrupt to close listener...')
+    raise KeyboardInterrupt
