@@ -182,91 +182,100 @@ class EventInfoHeader(GridLayout):
         t.start()
     
     def read_event_params(self):
-        stats = []
-        lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
-        for name in lookoutfor:
-            print(self.paramdict[name])
-            if '<' in self.paramdict[name]:
-                stats.append(0)
-            else:
-                stats.append(float(self.paramdict[name].strip('%')))
-        ev_type= lookoutfor[np.argmax(stats)]
-
-        if ev_type == 'Terrestrial':
-            processType = 'False Alarm'
-        elif ev_type == 'BNS':
-            processType = 'Binary Neutron Star merger'
-        elif ev_type == 'BBH':
-            processType = 'Binary Black Hole merger'
-        elif ev_type == 'MassGap':
-            processType = 'MassGap event'
-        elif ev_type == 'NSBH':
-            processType = 'Neutron Star Black Hole merger'
-            
-        far = self.paramdict['FAR'].split()
-        far[2] = "{0:.0f}".format(float(far[2]))
-        far = " ".join(far)
+        global main_flag
+        while main_flag == 0:
+            while self.var == '0':
+                stats = []
+                lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
+                for name in lookoutfor:
+                    print(self.paramdict[name])
+                    if '<' in self.paramdict[name]:
+                        stats.append(0)
+                    else:
+                        stats.append(float(self.paramdict[name].strip('%')))
+                ev_type= lookoutfor[np.argmax(stats)]
         
-        dist = float(self.paramdict['Distance'].split()[0])
-        distly = dist*3.262e+6
+                if ev_type == 'Terrestrial':
+                    processType = 'False Alarm'
+                elif ev_type == 'BNS':
+                    processType = 'Binary Neutron Star merger'
+                elif ev_type == 'BBH':
+                    processType = 'Binary Black Hole merger'
+                elif ev_type == 'MassGap':
+                    processType = 'MassGap event'
+                elif ev_type == 'NSBH':
+                    processType = 'Neutron Star Black Hole merger'
+                    
+                far = self.paramdict['FAR'].split()
+                far[2] = "{0:.0f}".format(float(far[2]))
+                far = " ".join(far)
+                
+                dist = float(self.paramdict['Distance'].split()[0])
+                distly = dist*3.262e+6
+                
+                insts = self.paramdict['Instruments']
+                insts_out =''
+                if 'V1' in insts:
+                    insts_out+='Virgo, '
+                if 'L1' in insts:
+                    insts_out+='LIGO Livingston, '
+                if 'H1' in insts:
+                    insts_out+='LIGO Hanford, '
+                processed = insts_out.split(',')[0:-1]
+                insts_formed = ''
+                for i,elem in enumerate(processed):
+                    if i == len(processed)-1 and len(processed) != 1:
+                        insts_formed+= ' and '+ elem
+                    else:
+                        insts_formed+= elem+','
+                
+                date = datetime.datetime.strptime(self.paramdict['DetectionTime'].split()[0],'%Y-%m-%d')
+                ordinal = lambda n: "%d%s" % (n,"tsnrhtdd"[(n//10%10!=1)*(n%10<4)*n%10::4])
+                dayname = calendar.day_name[date.weekday()]
+                month = calendar.month_name[date.month]
+                dayno = ordinal(date.day)
+                DateToken = dayname + ' the ' + dayno + ' of ' + str(month)
+                InitialToken = 'This event was detected by '+insts_formed+' on '+ DateToken + ' . '
+                EventTypeToken = 'The event is most likely to be a ' + processType + ', with a probability of ' + "{0:.0f}".format(float(self.paramdict[ev_type][:-1])-1) + ' percent. '
+                FalseAlarmToken = 'The false alarm rate of the event is ' + far +'. '
+                DistanceLookBackToken = 'It is approximately ' + oom_to_words(dist,'Megaparsecs',tts='on') + ' away, which is equivalent to a lookback time of '+ oom_to_words(distly,'years',tts='on')+'. '
+                if '<' not in self.paramdict['HasRemnant']:
+                    if float(self.paramdict['HasRemnant'][:-1]) > 10:
+                        HasRemnantToken = 'If astrophysical, the event may have left a remnant. The probability of this is '+ str(int(float(self.paramdict['HasRemnant'][:-1])))+' percent.'
+                        tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken,HasRemnantToken]
+                    else:
+                        tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken]
+                else:
+                    tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken]
         
-        insts = self.paramdict['Instruments']
-        insts_out =''
-        if 'V1' in insts:
-            insts_out+='Virgo, '
-        if 'L1' in insts:
-            insts_out+='LIGO Livingston, '
-        if 'H1' in insts:
-            insts_out+='LIGO Hanford, '
-        processed = insts_out.split(',')[0:-1]
-        insts_formed = ''
-        for i,elem in enumerate(processed):
-            if i == len(processed)-1 and len(processed) != 1:
-                insts_formed+= ' and '+ elem
-            else:
-                insts_formed+= elem+','
-        
-        date = datetime.datetime.strptime(self.paramdict['DetectionTime'].split()[0],'%Y-%m-%d')
-        ordinal = lambda n: "%d%s" % (n,"tsnrhtdd"[(n//10%10!=1)*(n%10<4)*n%10::4])
-        dayname = calendar.day_name[date.weekday()]
-        month = calendar.month_name[date.month]
-        dayno = ordinal(date.day)
-        DateToken = dayname + ' the ' + dayno + ' of ' + str(month)
-        InitialToken = 'This event was detected by '+insts_formed+' on '+ DateToken + ' . '
-        EventTypeToken = 'The event is most likely to be a ' + processType + ', with a probability of ' + "{0:.0f}".format(float(self.paramdict[ev_type][:-1])-1) + ' percent. '
-        FalseAlarmToken = 'The false alarm rate of the event is ' + far +'. '
-        DistanceLookBackToken = 'It is approximately ' + oom_to_words(dist,'Megaparsecs',tts='on') + ' away, which is equivalent to a lookback time of '+ oom_to_words(distly,'years',tts='on')+'. '
-        if '<' not in self.paramdict['HasRemnant']:
-            if float(self.paramdict['HasRemnant'][:-1]) > 10:
-                HasRemnantToken = 'If astrophysical, the event may have left a remnant. The probability of this is '+ str(int(float(self.paramdict['HasRemnant'][:-1])))+' percent.'
-                tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken,HasRemnantToken]
-            else:
-                tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken]
-        else:
-            tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken]
-
-        renderthreads = []
-        def render_audio(token,num):
-            print(token)
-            tts=gTTS(token)
-            tts.save('readout'+num+'.mp3')
-            
-        for k,token in enumerate(tokens):
-#            engine.say(token)
-#            engine.runAndWait()
-            t=threading.Thread(target=render_audio,args=(token,str(k)))
-            renderthreads.append(t)
-            t.start()
-        for t in renderthreads:
-            t.join()
-        maximum = k
-        while self.speak == '0':
-            if self.var == '1':
-                return
+                renderthreads = []
+                def render_audio(token,num):
+                    print(token)
+                    tts=gTTS(token)
+                    tts.save('readout'+num+'.mp3')
+                    
+                for k,token in enumerate(tokens):
+        #            engine.say(token)
+        #            engine.runAndWait()
+                    t=threading.Thread(target=render_audio,args=(token,str(k)))
+                    renderthreads.append(t)
+                    t.start()
+                for t in renderthreads:
+                    t.join()
+                maximum = k
+                while self.speak == '0':
+                    print('waiting for speech',self.speak)
+                    time.sleep(1)
+                while self.speak == '1':
+                    for i in range(maximum+1):
+                        if self.var == '0':
+                            os.system("mpg321 --stereo readout"+str(i)+".mp3")
+                        else:
+                            self.speak = '0'
+                            break
+                    break
             time.sleep(1)
-        for i in range(maximum+1):
-            if self.var == '0':
-                os.system("mpg321 --stereo readout"+str(i)+".mp3")
+        print('Speech thread ending...')
     def read_aloud(self):
         self.speaker_color=[0.8,0.8,0.8,0.4]
         self.speak='1'
@@ -613,9 +622,9 @@ class InfoPop(Screen):
         but.bind(on_press=pop.dismiss)
         pop.open()
     
-    def on_enter(self):
+    def on_pre_enter(self):
         self.var = '0'
-        self.speak='0'
+        self.speak ='0'
     def on_leave(self):
         if len(App.get_running_app().root.get_screen('historypop').ids.header.children) == 4:
             App.get_running_app().root.get_screen('historypop').ids.header.remove_widget(App.get_running_app().root.get_screen('historypop').ids.header.children[0])
@@ -649,7 +658,7 @@ class EventContainer(ButtonBehavior,GridLayout):
         App.get_running_app().root.get_screen('historypop').row = self.row
 #            pop.background_color=self.bgcol
 #            pop.background_color[3] = 1
-        App.get_running_app().root.transition = RiseInTransition()
+        App.get_running_app().root.transition = SlideTransition(direction='right')
         App.get_running_app().root.current='historypop'
         App.get_running_app().root.transition = NoTransition()
 

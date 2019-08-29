@@ -944,7 +944,9 @@
                             id:but1
                             text:'Back to Event History'
                             size_hint_y:0.15
-                            on_press:root.manager.current='history'
+                            on_press:
+                                root.manager.transition=SlideTransition(direction='left')
+                                root.manager.current='history'
                             
                 GridLayout:
                     rows:2
@@ -1068,7 +1070,9 @@
                 id:but2
                 text:'Back to \n Event \n History'
                 size_hint:(0.1,0.3)
-                on_press:root.manager.current='history'
+                on_press:
+                    root.manager.transition=SlideTransition(direction='left')
+                    root.manager.current='history'
                 text_size:root.width,None
                 halign:'center'
                 valign:'top'
