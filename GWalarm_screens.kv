@@ -753,12 +753,11 @@
                         width: 1
                         points: [self.x+self.width, self.y+self.height, self.x+self.width,self.y]
 
-#            HisScreenButton:
-#                text:'Main Menu'
-#                on_press:
-#                    root.manager.transition=SlideTransition(direction='left')
-#                    root.manager.current = 'main'
-            EventContainer:
+            HisScreenButton:
+                text:'Main Menu'
+                on_press:
+                    root.manager.transition=SlideTransition(direction='left')
+                    root.manager.current = 'main'
                                  
 
 <EventInfoSubHeader@GridLayout>:
