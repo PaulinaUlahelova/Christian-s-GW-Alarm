@@ -1,5 +1,6 @@
 #:kivy 1.11.0
 #:import Factory kivy.factory.Factory
+#: import SlideTransition kivy.uix.screenmanager.SlideTransition
 
 <Image,AsyncImage>:
     nocache:True
@@ -23,7 +24,10 @@
     titletext:'n'
     texty:'n'
     rows:4
-    on_press:self.parent.parent.parent.manager.current=self.name
+    dir:'left'
+    on_press:
+        app.root.transition=SlideTransition(direction=self.dir)
+        app.root.current=self.name
     canvas.before:
         Color:
             rgba:1,173/255,158/255,1 
@@ -200,11 +204,13 @@
                 titletext:'[b] Event History [/b]'
                 texty:'Browse detailed profiles on all events detected so far in Observing Run 3 (O3)'
                 imgsource:'./LIGO Hanford.jpg'
+                dir:'right'
             LabButton:
                 name:'status'
                 titletext:'[b] Detector Status [/b]'
                 texty:"Monitor the activities of the world's largest GW observatories"
                 imgsource:'./LIGO Livingston.jpg'
+                dir:'left'
                 
         BoxLayout:
             padding:20,5,20,5
@@ -398,7 +404,9 @@
             BoxLayout:
                 size_hint_x:0.13
                 HisScreenButton:
-                    on_press:root.manager.current='main'
+                    on_press:
+                        root.manager.transition=SlideTransition(direction='right')
+                        root.manager.current='main'
                     text:'Main Menu'
                     size_hint:0.2,0.15
             GridLayout:
@@ -422,7 +430,9 @@
             BoxLayout:
                 size_hint_x:0.13
                 HisScreenButton:
-                    on_press:root.manager.current='plots'
+                    on_press:
+                        root.manager.transition=SlideTransition(direction='left')
+                        root.manager.current='plots'
                     text:'Advanced \n Info'
                     text_size:root.width,None
                     halign:'center'
@@ -745,7 +755,9 @@
 
             HisScreenButton:
                 text:'Main Menu'
-                on_press:root.manager.current = 'main'
+                on_press:
+                    root.manager.transition=SlideTransition(direction='right')
+                    root.manager.current = 'main'
                  
 
 <EventInfoSubHeader@GridLayout>:
@@ -852,8 +864,8 @@
     part2info:['GraceID','Distance','FAR','DetectionTime','UpdateTime','Instruments']
     part3info:['BBH','BNS','NSBH','MassGap','Terrestrial']
     var:'0'
-    namelist: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS','skymap']
-    row: ['GraceID','Distance','FAR','DetectionTime','UpdateTime','Revision','BBH','BNS','NSBH','MassGap','Terrestrial','HasRemnant','HasNS','skymap']
+    namelist: ['AlertType', 'BBH', 'BNS', 'DetectionTime', 'Distance', 'FAR', 'GraceID', 'Group', 'HasNS', 'HasRemnant', 'Instruments', 'MassGap', 'NSBH', 'Revision', 'Terrestrial', 'UpdateTime', 'skymap']
+    row: ['Initial', '100.000%', '<0.1%', '2019-04-08 at 18:18:02', '1472.901 +- 357.875 Mpc', 'One every 11.28 Billion years', 'S190408an', 'CBC', '< 0.1%', '12.00%', 'H1,L1,V1', '<0.1%', '<0.1%', '2', '<0.1%', '2019-04-08 at 20:21:42', 'S190408an.png']
     rowdict:dict(zip(self.namelist,self.row))
     
     background_color: [.2,.2,.4,1]
@@ -1124,7 +1136,9 @@
                 desc:root.descs[3]
             
         Button:
-            on_press:root.manager.current='status'
+            on_press:
+                root.manager.transition=SlideTransition(direction='left')
+                root.manager.current='status'
             text:'Back to the Detector Portal'
             size_hint_y:0.08
     

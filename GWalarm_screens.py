@@ -99,7 +99,7 @@ else:
 from gtts import gTTS
 
 Builder.unload_file("GWalarm.kv")
-Builder.load_file('GWalarm.kv')
+Builder.load_file('GWalarm_screens.kv')
 
 '''are we in the right folder? Preserves img functionality'''
 if os.path.basename(os.getcwd()) != 'event_data':
@@ -617,9 +617,12 @@ class InfoPop(Screen):
         self.var = '0'
         self.speak='0'
     def on_leave(self):
+        if len(App.get_running_app().root.get_screen('historypop').ids.header.children) == 4:
+            App.get_running_app().root.get_screen('historypop').ids.header.remove_widget(App.get_running_app().root.get_screen('historypop').ids.header.children[0])
+            App.get_running_app().root.get_screen('historypop').ids.header.do_layout()
         self.var = '1'
-        App.get_running_app().root.remove_widget(App.get_running_app().root.get_screen('historypop'))
         App.get_running_app().root.transition = SlideTransition()
+        App.get_running_app().root.get_screen('historypop').ids.caro.index=0
         
 class GlossDefLabel(Label):
     nom=ObjectProperty()
@@ -642,14 +645,13 @@ class EventContainer(ButtonBehavior,GridLayout):
     text5=StringProperty('tobereplaced')
         
     def details(self):
-        if 'historypop' not in App.get_running_app().root.screen_names:
-            pop = InfoPop(name='historypop',namelist=self.namelist,row=self.row)
-            App.get_running_app().root.add_widget(pop)
-            pop.background_color=self.bgcol
-            pop.background_color[3] = 1
-            App.get_running_app().root.transition = RiseInTransition()
-            App.get_running_app().root.current='historypop'
-            App.get_running_app().root.transition = NoTransition()
+        App.get_running_app().root.get_screen('historypop').namelist = self.namelist
+        App.get_running_app().root.get_screen('historypop').row = self.row
+#            pop.background_color=self.bgcol
+#            pop.background_color[3] = 1
+        App.get_running_app().root.transition = RiseInTransition()
+        App.get_running_app().root.current='historypop'
+        App.get_running_app().root.transition = NoTransition()
 
 def statusupdate(obj):
     global main_flag
@@ -879,7 +881,7 @@ class MainScreenv2(Screen):
                 time.sleep(5)
             
             #Close all active popups - prevents crashes if left unattended for a while.
-            if 'historypop' in App.get_running_app().root.screen_names():
+            if 'historypop' in App.get_running_app().root.screen_names:
                 App.get_running_app().root.transition = NoTransition()
                 App.get_running_app().root.current = 'main'
                 App.get_running_app().root.transition = SlideTransition()
@@ -936,14 +938,14 @@ class MainScreenv2(Screen):
             h5file.close()
             
             newevent_flag=0
-    
-            pop = InfoPop(name='historypop',namelist=namelist,row=orderedrow)
+            App.get_running_app().root.get_screen('historypop').namelist = namelist
+            App.get_running_app().root.get_screen('historypop').row = orderedrow
             extralabel = Label(text='[b]NEW EVENT[/b]',markup=True,font_size=20,halign='left',color=[0,0,0,1],size_hint_x=0.2)
-            pop.ids.header.add_widget(extralabel)
+            App.get_running_app().root.get_screen('historypop').ids.header.add_widget(extralabel)
             if pixels:
-                pop.ids.but1.bind(on_press=self.notif_off)
-                pop.ids.but2.bind(on_press=self.notif_off)
-            App.get_running_app().current = 'historypop'
+                App.get_running_app().root.get_screen('historypop').ids.but1.bind(on_press=self.notif_off)
+                App.get_running_app().root.get_screen('historypop').ids.but2.bind(on_press=self.notif_off)
+            App.get_running_app().root.current = 'historypop'
 
 
     def notifier(self):
@@ -1010,7 +1012,7 @@ class MainScreenv2(Screen):
         FalseAlarmToken = 'The false alarm rate of the event is ' + process_FAR(far,tts='on') +'. '
         DistanceLookBackToken = 'It is approximately ' + oom_to_words(dist,'Megaparsecs',tts='on') + ' away, which is equivalent to a lookback time of '+ oom_to_words(distly,'years',tts='on')+'. '
     
-        if paramdict['HasRemnant'][:-1] != '<0.1':
+        if '<' not in paramdict['HasRemnant'][:-1]:
             if float(paramdict['HasRemnant'][:-1]) > 10:
                 HasRemnantToken = 'If astrophysical, the event may also have left a remnant. The probability of this is '+ str(int(float(paramdict['HasRemnant'][:-1])))+' percent.'
                 tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken,HasRemnantToken]
@@ -1081,8 +1083,8 @@ class StatBio(Screen):
     detlist=ListProperty()
     bio=ObjectProperty()
     def change(obj):    
-        App.get_running_app().root.current = 'status'
         App.get_running_app().root.transition=NoTransition()
+        App.get_running_app().root.current = 'status'
         for child in App.get_running_app().root.current_screen.children[0].children:
             if child.pos[1] < 240:
                 anim = Animation(x=child.pos[0],y=240+child.pos[1]+child.height)
@@ -1135,6 +1137,7 @@ class MyApp(App):
         sm.add_widget(StatusScreenv2(name='status'))
         sm.add_widget(PlotsScreen(name='plots'))
         sm.add_widget(StatBio(name='statinfo'))
+        sm.add_widget(InfoPop(name='historypop'))
         
         print('Initialised application...')
         return sm
