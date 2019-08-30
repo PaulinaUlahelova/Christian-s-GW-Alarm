@@ -204,11 +204,13 @@ class EventInfoHeader(GridLayout):
                     processType = 'MassGap event'
                 elif ev_type == 'NSBH':
                     processType = 'Neutron Star Black Hole merger'
-                    
-                far = self.paramdict['FAR'].split()
-                far[2] = "{0:.0f}".format(float(far[2]))
-                far = " ".join(far)
                 
+                far = self.paramdict['FAR'].split()
+                if len(far) != 1:
+                    far[2] = "{0:.0f}".format(float(far[2]))
+                    far = " ".join(far)
+                else:
+                    far = far[0]
                 dist = float(self.paramdict['Distance'].split()[0])
    #             distly = (2/3/72000)*(1-1/(1+72000*dist/scipy.constants.c)**1.5)
                 distly = dist*3.262e+6
@@ -230,14 +232,19 @@ class EventInfoHeader(GridLayout):
                         insts_formed+= ' and '+ elem
                     else:
                         insts_formed+= elem+','
-                
+        
                 date = datetime.datetime.strptime(self.paramdict['DetectionTime'].split()[0],'%Y-%m-%d')
                 ordinal = lambda n: "%d%s" % (n,"tsnrhtdd"[(n//10%10!=1)*(n%10<4)*n%10::4])
                 dayname = calendar.day_name[date.weekday()]
                 month = calendar.month_name[date.month]
                 dayno = ordinal(date.day)
                 DateToken = dayname + ' the ' + dayno + ' of ' + str(month) + ' ' + str(date.year)
-                InitialToken = 'This event was detected by '+insts_formed+' on '+ DateToken + ' . '
+                if len(self.children) == 4:
+                    #This is a new event popup
+                    NewOrNotToken = 'A new event has been'
+                else:   
+                    NewOrNotToken = 'This event was'
+                InitialToken = NewOrNotToken+ ' detected by '+insts_formed+' on '+ DateToken + ' . '
                 EventTypeToken = 'The event is most likely to be a ' + processType + ', with a probability of ' + "{0:.0f}".format(float(self.paramdict[ev_type][:-1])-1) + ' percent. '
                 FalseAlarmToken = 'The false alarm rate of the event is ' + far +'. '
                 DistanceLookBackToken = 'It is approximately ' + oom_to_words(dist,'Megaparsecs',tts='on') + ' away, which is equivalent to a lookback time of '+ oom_to_words(distly,'years',tts='on')+'. '
@@ -280,7 +287,9 @@ class EventInfoHeader(GridLayout):
         print('Speech thread closing...')
     def read_aloud(self):
         self.speaker_color=[0.8,0.8,0.8,0.4]
-        self.speak='1'
+        self.var=0
+        self.speak=1
+        
 
     def speaker_back(self):
         self.speaker_color=[0,0,0,0]
@@ -381,15 +390,13 @@ def oom_to_words(inputval,unit,tts='off'):
     return return_string
 
 def process_FAR(FAR,tts='off'):
+    if type(FAR) is not float:
+        FAR = float(FAR)
     per_yr = FAR*scipy.constants.year
     if per_yr <= 1:
         oneinyr = 1/per_yr
     else:
         oneinyr = per_yr
-#    if len(str(oneinyr).split('.')[0]) >= 5 or 'e' in str(oneinyr):
-#        val = "One every "+str("{0:.2e}".format(oneinyr))+" yrs"
-#    else:
-#        val = "One every "+str("{0:.3f}".format(oneinyr))+" yrs"
         
     val = 'One every ' + oom_to_words(oneinyr,'years',tts)
     return val
@@ -467,7 +474,6 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                 elif 'Instruments' in sorttype:
                     sort_vars.append(row['Instruments'].decode())
             if sort_vars != []:
-                print(sort_vars)
                 if 'Descending' in sorttype:
                     try:
                         tables = [x for _,x in reversed(sorted(zip(sort_vars,tables)),key=len[0])]
@@ -623,14 +629,13 @@ class InfoPop(Screen):
         pop.open()
     
     def on_pre_enter(self):
-        self.var = '0'
-        self.speak ='0'
-        
+        self.var = 0    
+        self.speak =0
     def on_leave(self):
         if len(App.get_running_app().root.get_screen('historypop').ids.header.children) == 4:
             App.get_running_app().root.get_screen('historypop').ids.header.remove_widget(App.get_running_app().root.get_screen('historypop').ids.header.children[0])
             App.get_running_app().root.get_screen('historypop').ids.header.do_layout()
-        self.var = '1'
+        self.var = 1
         App.get_running_app().root.transition = SlideTransition()
         
 class GlossDefLabel(Label):
@@ -875,12 +880,6 @@ class MainScreenv2(Screen):
                 #check for the flag once per minute (same rate the file is polled)
                 if newevent_flag == 1:
                     #skip a level up to execute the rest of the loop, then back to waiting.
-                    if buzzPin is not None:
-                        buzzthread = threading.Thread(target=buzz,args=(3,1))
-                        buzzthread.start()
-                    if pixels:
-                        notifthread = threading.Thread(target=self.notifier)
-                        notifthread.start()
                     print('New event has been detected!!')
                     break
                 if main_flag == 1:
@@ -927,8 +926,12 @@ class MainScreenv2(Screen):
             new_event_row = new_event_table[-1]
             orderedrow = []
             for key in namelist:
-                orderedrow.append(new_event_row[key].decode())
-            name_row_dict = dict(zip(namelist,orderedrow))
+                if key == 'FAR':
+                    v=process_FAR(new_event_row[key].decode())
+                    orderedrow.append(v)
+                else:
+                    orderedrow.append(new_event_row[key].decode())
+#            name_row_dict = dict(zip(namelist,orderedrow))
             
             stats = []
             lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
@@ -939,14 +942,12 @@ class MainScreenv2(Screen):
                 t = threading.Thread(target=type_notif,args=(winner,'on'))
                 t.start()
                 
-            speech_thread  = threading.Thread(target=self.read_event_params,args=(name_row_dict,winner))
-            speech_thread.start()
-
             if  eventid == 'EventSimulation':
                 h5file.remove_node("/events",'EventSimulation')
             h5file.close()
             
             newevent_flag=0
+
             App.get_running_app().root.get_screen('historypop').namelist = namelist
             App.get_running_app().root.get_screen('historypop').row = orderedrow
             extralabel = Label(text='[b]NEW EVENT[/b]',markup=True,font_size=20,halign='left',color=[0,0,0,1],size_hint_x=0.2)
@@ -954,8 +955,17 @@ class MainScreenv2(Screen):
             if pixels:
                 App.get_running_app().root.get_screen('historypop').ids.but1.bind(on_press=self.notif_off)
                 App.get_running_app().root.get_screen('historypop').ids.but2.bind(on_press=self.notif_off)
-            App.get_running_app().root.current = 'historypop'
 
+            '''Now that we're ready, sound the alarms'''
+            if buzzPin is not None:
+                buzzthread = threading.Thread(target=buzz,args=(3,1))
+                buzzthread.start()
+            if pixels:
+                notifthread = threading.Thread(target=self.notifier)
+                notifthread.start()
+
+            App.get_running_app().root.current = 'historypop'
+            App.get_running_app().root.get_screen('historypop').ids.header.speak = 1
 
     def notifier(self):
         self.notif_light_var=1

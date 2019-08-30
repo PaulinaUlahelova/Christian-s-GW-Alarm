@@ -848,10 +848,24 @@
                     pos:self.pos
                     size:self.size
     
-            
+<InfoContainer@GridLayout>:
+    text1:'torep'
+    text2:'torep'
+    cols:2
+    InfoLabel:
+        size_hint_x:0.5
+        text:'[b]'+root.text1+'[/b]'
+        markup:True
+        halign:'center'
+    InfoLabel:
+        size_hint_x:0.5
+        text:root.text2
+        halign:'left'
+        text_size:root.width/2,None
+        
 <InfoLabel@Label>:
     bg_col:(0,0,0,0)
-    color:(1,1,1,1)
+    color:(0,0,0,1)
     canvas.before:
         Color:
             rgba:self.bg_col
@@ -961,6 +975,13 @@
                             font_size: dp(20)
                             color:0,0,0,1
                             markup:True
+                            canvas.before:
+                                Color:
+                                    rgba:.4,.4,.4,1
+                                Line:
+                                    width:1
+                                    points:self.x+self.width*0.05,self.y,self.x+self.width*0.95,self.y
+
                         GridLayout:
                             rows:2
                             size_hint:1,0.3
@@ -1025,21 +1046,21 @@
                         Line:
                             width:1
                             rectangle:self.x,self.y,self.width,self.height
-                    InfoLabel:
-                        text:root.part2info[1] + ':' + root.rowdict[root.part2info[1]].replace('+-',u'\xb1')
-                        color:0,0,0,1
-                    InfoLabel:
-                        text: root.part2info[2] + ':' + root.rowdict[root.part2info[2]]
-                        color:0,0,0,1
-                    InfoLabel:
-                        text:root.part2info[3] + ':' + root.rowdict[root.part2info[3]]
-                        color:0,0,0,1
-                    InfoLabel:
-                        text: root.part2info[4] + ':' + root.rowdict[root.part2info[4]]
-                        color:0,0,0,1
-                    InfoLabel:
-                        text: root.part2info[5] + ':' + root.rowdict[root.part2info[5]]
-                        color:0,0,0,1
+                    InfoContainer:
+                        text1:root.part2info[1]
+                        text2:root.rowdict[root.part2info[1]].replace('+-',u'\xb1')
+                    InfoContainer:
+                        text1: root.part2info[2]
+                        text2:root.rowdict[root.part2info[2]]
+                    InfoContainer:
+                        text1:root.part2info[3]
+                        text2:root.rowdict[root.part2info[3]]
+                    InfoContainer:
+                        text1: root.part2info[4]
+                        text2:root.rowdict[root.part2info[4]]
+                    InfoContainer:
+                        text1: root.part2info[5]
+                        text2:root.rowdict[root.part2info[5]]
                 GridLayout:
                     size_hint_y:0.4
                     rows: len(root.part3info)
@@ -1052,18 +1073,24 @@
                     InfoLabel:
                         text:root.part3info[0] + ':' + root.rowdict[root.part3info[0]]
                         bg_col:(44/255,160/255,44/255,1)
+                        color:1,1,1,1
                     InfoLabel:
                         text:root.part3info[1] + ':' + root.rowdict[root.part3info[1]]
                         bg_col:(31/255,119/255,180/255,1)
+                        color:1,1,1,1
+
                     InfoLabel:
                         text: root.part3info[2] + ':' + root.rowdict[root.part3info[2]]
                         bg_col:(1,127/255,14/255,1)
+                        color:1,1,1,1
                     InfoLabel:
                         text:root.part3info[3] + ':' + root.rowdict[root.part3info[3]]
                         bg_col:(214/255,39/255,40/255,1)
+                        color:1,1,1,1
                     InfoLabel:
                         text: root.part3info[4] + ':' + root.rowdict[root.part3info[4]]
                         bg_col:(148/255,103/255,189/255,1)
+                        color:1,1,1,1
 
             GridLayout:
                 rows:2
@@ -1193,7 +1220,7 @@
     padding:(3,10)
     spacing:(0,3)
 
-    text:'[b][u]'+self.nom+'[/b][/u] \n' + self.desc
+    text:'[size=16dp][b][u]'+self.nom+'[/b][/u][/size] \n' + self.desc
     valign:'top'
     size_hint_y:None
     text_size: root.width, None
@@ -1202,10 +1229,16 @@
     font_size:dp(12)
     line_height:1
     markup:True
+    color:0,0,0,1
     
 <Glossary@RecycleView>
     viewclass: 'GlossDefLabel'
-    
+    canvas.before:
+        Color:
+            rgba:0.9,0.9,0.9,1
+        Rectangle:
+            pos:self.pos
+            size:self.size
     RecycleBoxLayout:
         default_size:None,dp(56)
         default_size_hint:1,None
@@ -1213,6 +1246,7 @@
         height:self.minimum_height
         orientation:'vertical'
         padding:[0,20]
+        
 	
 <HisMainLabel@Label>:
     color:0,0,0,1
