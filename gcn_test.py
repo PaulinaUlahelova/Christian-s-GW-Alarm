@@ -73,8 +73,6 @@ def process_gcn(payload, root):
               for elem in root.iterfind('.//Param')}
     descs = [elem.text for elem in root.iterfind('.//Description')]
 
-    if params['Group'] != 'CBC':
-        return
 
     #prepare path for localization skymap, then download and produce the map in png format
     #filepath = params['skymap_fits']
@@ -156,6 +154,10 @@ def process_gcn(payload, root):
             pass
         h5file.close()
         return
+    
+    if params['Group'] != 'CBC':
+        return
+    
     if sim == False:
         try:
             table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
@@ -238,7 +240,6 @@ def process_gcn(payload, root):
     '''PLOTTING'''
     #save the pie of possibilities
     specindex = np.argmax(vals)
-
     fig1, ax1 = plt.subplots(figsize=(5,5))
     ax1.pie(vals,labels=None,wedgeprops=dict(width=0.5))
     ax1.axis('equal')

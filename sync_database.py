@@ -40,8 +40,6 @@ def sync_database():
     for col in soup.tbody.find_all("tr"):
         #print(row)
         #for col in row("tr"):
-        if 'RETRACTED' in str(col):
-            continue
         #link = col.find(hasstylenotclass).a.extract()
         name = col.find(hasstylenotclass).a.string
         eventnames.append(name)
@@ -55,14 +53,16 @@ def sync_database():
         
         bestfiles = []
         imglinks = []
-    
-        if any('Update' in s for s in all_files):
+        retracted = 0
+        if any('Retract' in s for s in all_files):
+            bestfiles= [s for s in all_files if 'Retract' in s]
+            retracted = 1
+        elif any('Update' in s for s in all_files):
             bestfiles = [s for s in all_files if 'Update' in s]
         elif any('Initial' in s for s in all_files):
             bestfiles= [s for s in all_files if 'Initial' in s]
         else:
-            bestfiles = [s for s in all_files if 'Preliminary' in s]
-            
+            bestfiles = [s for s in all_files if 'Preliminary' in s]            
         if any('LALInferenceOffline.png' in s for s in all_files):
             imglinks = [s for s in all_files if 'LALInferenceOffline.png' in s]
         else:
@@ -76,8 +76,8 @@ def sync_database():
         
         imgpath = evname+'.png'
         datapath = 'ToRead'+evname+'.xml'
-        
-        os.system("curl --silent -0 "+imgfilepath + '> ' + './'+imgpath)
+        if retracted != 1:
+            os.system("curl --silent -0 "+imgfilepath + '> ' + './'+imgpath)
         os.system("curl --silent -0 "+datafilepath + '> ' + './'+datapath)
 
         payload = open(datapath,'rb').read()
