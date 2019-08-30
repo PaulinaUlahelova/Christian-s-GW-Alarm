@@ -27,7 +27,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from kivy.graphics import Color, Rectangle
 from kivy.properties import ListProperty, ObjectProperty, StringProperty, AliasProperty, DictProperty, NumericProperty
-from kivy.uix.screenmanager import ScreenManager, Screen, FadeTransition, SlideTransition, NoTransition, RiseInTransition
+from kivy.uix.screenmanager import ScreenManager, Screen, SlideTransition, NoTransition, RiseInTransition
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.carousel import Carousel
 from kivy.uix.popup import Popup
@@ -170,8 +170,8 @@ class HisColLabel(ToggleButtonBehavior,Label):
 
 class EventInfoHeader(GridLayout):
     paramdict=ObjectProperty()
-    var=StringProperty('0')
-    speak=StringProperty('0')
+    var=NumericProperty(1)
+    speak=NumericProperty(0)
     speaker_color=ObjectProperty()
 #    
     def __init__(self,**kwargs):
@@ -184,11 +184,10 @@ class EventInfoHeader(GridLayout):
     def read_event_params(self):
         global main_flag
         while main_flag == 0:
-            while self.var == '0':
+            while self.var == 0 and main_flag == 0:
                 stats = []
                 lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
                 for name in lookoutfor:
-                    print(self.paramdict[name])
                     if '<' in self.paramdict[name]:
                         stats.append(0)
                     else:
@@ -211,7 +210,10 @@ class EventInfoHeader(GridLayout):
                 far = " ".join(far)
                 
                 dist = float(self.paramdict['Distance'].split()[0])
+   #             distly = (2/3/72000)*(1-1/(1+72000*dist/scipy.constants.c)**1.5)
                 distly = dist*3.262e+6
+
+   #             print(distly)
                 
                 insts = self.paramdict['Instruments']
                 insts_out =''
@@ -234,7 +236,7 @@ class EventInfoHeader(GridLayout):
                 dayname = calendar.day_name[date.weekday()]
                 month = calendar.month_name[date.month]
                 dayno = ordinal(date.day)
-                DateToken = dayname + ' the ' + dayno + ' of ' + str(month)
+                DateToken = dayname + ' the ' + dayno + ' of ' + str(month) + ' ' + str(date.year)
                 InitialToken = 'This event was detected by '+insts_formed+' on '+ DateToken + ' . '
                 EventTypeToken = 'The event is most likely to be a ' + processType + ', with a probability of ' + "{0:.0f}".format(float(self.paramdict[ev_type][:-1])-1) + ' percent. '
                 FalseAlarmToken = 'The false alarm rate of the event is ' + far +'. '
@@ -263,26 +265,26 @@ class EventInfoHeader(GridLayout):
                 for t in renderthreads:
                     t.join()
                 maximum = k
-                while self.speak == '0':
-                    print('waiting for speech',self.speak)
+                while self.speak == 0 and main_flag == 0 and self.var == 0:
                     time.sleep(1)
-                while self.speak == '1':
+                while self.speak == 1 and main_flag == 0 and self.var == 0:
                     for i in range(maximum+1):
-                        if self.var == '0':
+                        if self.var == 0:
                             os.system("mpg321 --stereo readout"+str(i)+".mp3")
                         else:
-                            self.speak = '0'
+                            self.speak = 0
                             break
+                        self.speak = 0
                     break
             time.sleep(1)
-        print('Speech thread ending...')
+        print('Speech thread closing...')
     def read_aloud(self):
         self.speaker_color=[0.8,0.8,0.8,0.4]
         self.speak='1'
 
     def speaker_back(self):
         self.speaker_color=[0,0,0,0]
-        
+    
 
 class HistoryScreenv2(Screen):
     def __init__(self,**kwargs):
@@ -335,24 +337,15 @@ class HistoryScreenv2(Screen):
         
     def stupid(obj):
         def refresh_all(arg):
-            global main_flag
-            main_flag = 1
-            
-            #stop all threads
-#            for t in threading.enumerate():
-#                print(t.name)
-                
-            App.get_running_app().stop()
-            App.get_running_app().root_window.close()
-            print('shutdown')
-            #time.sleep(5)
             sync_database()
             #Wait for it to finish....
-            print('done - restart away')
         content = Button(text='Ok')
+        content.bind(on_press = lambda arg: content.unbind(on_press=refresh_all))
         content.bind(on_press=refresh_all)
         confirm = Popup(title='Are you sure?',content=content,size_hint=(0.4,0.4))
         confirm.open()
+        content.bind(on_press=confirm.dismiss)
+
         
         
 def oom_to_words(inputval,unit,tts='off'):
@@ -562,6 +555,9 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             i+=0.2
             time.sleep(0.2)
 
+class SkyPop(ModalView):
+    imgsource=StringProperty()
+
 class DevPop(ModalView):
     def simulate(self):
         global newevent_flag
@@ -589,6 +585,10 @@ class DevPop(ModalView):
 class InfoPop(Screen):
     namelist=ObjectProperty()
     row=ObjectProperty()
+    
+    def update_skymap(self):
+        pop = SkyPop(imgsource=self.rowdict['skymap'])
+        pop.open()
     def gloss_open(self):
         descdict = {'GraceID': 'Identifier in GraceDB', 'AlertType': 'VOEvent alert type', 
             'Instruments': 'List of instruments used in analysis to identify this event', 
@@ -625,13 +625,13 @@ class InfoPop(Screen):
     def on_pre_enter(self):
         self.var = '0'
         self.speak ='0'
+        
     def on_leave(self):
         if len(App.get_running_app().root.get_screen('historypop').ids.header.children) == 4:
             App.get_running_app().root.get_screen('historypop').ids.header.remove_widget(App.get_running_app().root.get_screen('historypop').ids.header.children[0])
             App.get_running_app().root.get_screen('historypop').ids.header.do_layout()
         self.var = '1'
         App.get_running_app().root.transition = SlideTransition()
-        App.get_running_app().root.get_screen('historypop').ids.caro.index=0
         
 class GlossDefLabel(Label):
     nom=ObjectProperty()
@@ -1072,10 +1072,15 @@ class StatusScreenv2(Screen):
                 anim=Animation(x=child.pos[0],y=240+child.pos[1]+child.height,duration=0.5)
                 anim.start(child)
                 
-        App.get_running_app().root.transition=FadeTransition(duration=0.3)
+        App.get_running_app().root.transition=NoTransition()
         def change(presser):
             App.get_running_app().root.current='statinfo'
-            App.get_running_app().root.current_screen.detlist = presser.prop
+            propers = presser.prop
+            if propers[2] == 'N/A':
+                propers[2] = ''
+            else:
+                propers[2] = ' for ' + propers[2]
+            App.get_running_app().root.current_screen.detlist = propers
             App.get_running_app().root.current_screen.bio = presser.bio
         Clock.schedule_once(lambda dt: change(presser),0.5)
 
