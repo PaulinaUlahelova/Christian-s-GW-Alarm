@@ -98,6 +98,9 @@ else:
 #engine.setProperty('rate',130)
 from gtts import gTTS
 
+if os.getcwd() != os.path.dirname(os.path.realpath(__file__)):
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+
 Builder.unload_file("GWalarm.kv")
 Builder.load_file('GWalarm_screens.kv')
 
