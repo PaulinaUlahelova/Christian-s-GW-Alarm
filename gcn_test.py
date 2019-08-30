@@ -115,10 +115,10 @@ def process_gcn(payload, root):
     for col in soup2.tbody.find_all("tr"):
         if 'DISTMEAN' in str(col):
             dist = col.text.split('\n')[2]
-            dist = str("{0:.3f}".format(float(dist)))
+            dist = str("{0:.0f}".format(float(dist)))
         elif 'DISTSTD' in str(col):
             diststd = col.text.split('\n')[2]
-            diststd= str("{0:.3f}".format(float(diststd)))
+            diststd= str("{0:.0f}".format(float(diststd)))
     finaldist = dist + ' +- '+diststd + ' Mpc'
 
 
@@ -238,32 +238,32 @@ def process_gcn(payload, root):
     h5file.close()
 
     '''PLOTTING'''
-    #save the pie of possibilities
-    specindex = np.argmax(vals)
-    fig1, ax1 = plt.subplots(figsize=(5,5))
-    ax1.pie(vals,labels=None,wedgeprops=dict(width=0.5))
-    ax1.axis('equal')
-#    plt.text(0,0.1,'Type:',fontsize=20,transform=ax1.transAxes)
-#    plt.text(0,0,order[specindex],fontsize=20,transform=ax1.transAxes)
-    plt.text(0.365,0.55,'Event Type:',transform=ax1.transAxes,fontsize=16)
-    if order[specindex] == 'NSBH':
-        plt.text(0.395,0.42,order[specindex],fontsize=26,transform=ax1.transAxes)
-    elif order[specindex] == 'Terrestrial':
-        plt.text(0.335,0.44,order[specindex],fontsize=22,transform=ax1.transAxes)
-    elif order[specindex] == 'MassGap':
-        plt.text(0.335,0.44,order[specindex],fontsize=26,transform=ax1.transAxes)
-    else:
-        plt.text(0.42,0.42,order[specindex],fontsize=28,transform=ax1.transAxes)
-
-    plt.text(0,0.05,'Event Type',fontsize=13,transform=ax1.transAxes)
-    plt.text(0,0.01,'Probability Distribution',fontsize=13,transform=ax1.transAxes)
-
-    plt.tight_layout()
     if sim:  
-        plt.savefig('EventSimulation_pie.png')
+        pass
     else:
+        #save the pie of possibilities
+        specindex = np.argmax(vals)
+        fig1, ax1 = plt.subplots(figsize=(4,4))
+        ax1.pie(vals,labels=None,wedgeprops=dict(width=0.5))
+        ax1.axis('equal')
+    #    plt.text(0,0.1,'Type:',fontsize=20,transform=ax1.transAxes)
+    #    plt.text(0,0,order[specindex],fontsize=20,transform=ax1.transAxes)
+        plt.text(0.365,0.55,'Event Type:',transform=ax1.transAxes,fontsize=16*0.8)
+        if order[specindex] == 'NSBH':
+            plt.text(0.395,0.42,order[specindex],fontsize=26*0.8,transform=ax1.transAxes)
+        elif order[specindex] == 'Terrestrial':
+            plt.text(0.335,0.44,order[specindex],fontsize=22*0.8,transform=ax1.transAxes)
+        elif order[specindex] == 'MassGap':
+            plt.text(0.335,0.44,order[specindex],fontsize=26*0.8,transform=ax1.transAxes)
+        else:
+            plt.text(0.42,0.42,order[specindex],fontsize=28*0.8,transform=ax1.transAxes)
+    
+        plt.text(0,0.05,'Event Type',fontsize=13*0.8,transform=ax1.transAxes)
+        plt.text(0,0.01,'Probability Distribution',fontsize=13*0.8,transform=ax1.transAxes)
+    
+        plt.tight_layout()
         plt.savefig(params['GraceID']+'_pie.png')
-    plt.close(fig1)
+        plt.close(fig1)
     t.join()
 
 #gcn.listen(host="209.208.78.170",handler=process_gcn)
