@@ -241,13 +241,15 @@ class EventInfoHeader(GridLayout):
                 dayname = calendar.day_name[date.weekday()]
                 month = calendar.month_name[date.month]
                 dayno = ordinal(date.day)
-                DateToken = dayname + ' the ' + dayno + ' of ' + str(month) + ' ' + str(date.year)
+                DateToken = ' on ' +dayname + ' the ' + dayno + ' of ' + str(month) + ' ' + str(date.year)
+                
                 if len(self.children) == 4:
                     #This is a new event popup
                     NewOrNotToken = 'A new event has been'
+                    DateToken = ''
                 else:   
                     NewOrNotToken = 'This event was'
-                InitialToken = NewOrNotToken+ ' detected by '+insts_formed+' on '+ DateToken + ' . '
+                InitialToken = NewOrNotToken+ ' detected by '+insts_formed+ DateToken + ' . '
                 EventTypeToken = 'The event is most likely to be a ' + processType + ', with a probability of ' + "{0:.0f}".format(float(self.paramdict[ev_type][:-1])-1) + ' percent. '
                 FalseAlarmToken = 'The false alarm rate of the event is ' + far +'. '
                 DistanceLookBackToken = 'It is approximately ' + oom_to_words(dist,'Megaparsecs',tts='on') + ' away, which is equivalent to a lookback time of '+ oom_to_words(distly,'years',tts='on')+'. '
@@ -572,7 +574,7 @@ class DevPop(ModalView):
         global newevent_flag
         if newevent_flag == 0:
             #don't start if it's not safe
-            self.dismiss()
+
             
             def process():
                 payload=open("EventDemonstration.xml",'rb').read()
@@ -582,9 +584,13 @@ class DevPop(ModalView):
                 process_gcn(payload,root)
                 global newevent_flag
                 newevent_flag=1
+                while newevent_flag == 1:
+                    time.sleep(0.5)
                 
             t = threading.Thread(target=process)
             t.start()
+            self.dismiss(animation=False)
+            Clock.schedule_once(lambda dt: t.join(),0)
         else:
             content = Label(text='The event is coming, be patient!')
             popu = Popup(title="It's on the way...",content=content)
@@ -1105,7 +1111,8 @@ class PlotsScreen(Screen):
         super().__init__(**kwargs)
         t3 = threading.Thread(target=plotupdate,args=(self,),daemon=True)
         t3.start()
-        
+    def update_buttons(self,index):
+        getattr(self.ids,'pbut'+str(index+1)).trigger_action(duration=0)
 class StatBio(Screen):
     detlist=ListProperty()
     bio=ObjectProperty()
@@ -1175,6 +1182,6 @@ if __name__ == '__main__':
     Builder.unload_file("GWalarm.kv")
     if pixels:
         GPIO.cleanup()
-    time.sleep(10)
+    time.sleep(5)
     print('KeyboardInterrupt to close listener...')
     raise KeyboardInterrupt
