@@ -88,7 +88,7 @@ def sync_database():
     pool = multiprocessing.Pool(len(eventlinks),process,(q,))
     try:
         q.qsize()
-        ok = 0
+        ok = 1
     except NotImplementedError:
         ok = 0
     for i,link in enumerate(eventlinks):
