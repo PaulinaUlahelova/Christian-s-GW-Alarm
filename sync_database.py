@@ -86,10 +86,19 @@ def sync_database():
 
     q = multiprocessing.Queue()
     pool = multiprocessing.Pool(len(eventlinks),process,(q,))
+    try:
+        q.qsize()
+        ok = 0
+    except NotImplementedError:
+        ok = 0
     for i,link in enumerate(eventlinks):
-        while q.qsize() > 20:
-            time.sleep(1)
-        q.put([link,eventnames[i]])
+        if ok == 1:
+            while q.qsize() > 20:
+                time.sleep(1)
+            q.put([link,eventnames[i]])
+        elif ok == 0:
+            q.put([link,eventnames[i]])
+            
     pool.close()
     pool.join()
     
