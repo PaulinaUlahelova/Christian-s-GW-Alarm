@@ -40,7 +40,7 @@ def statusdetect():
             statuses.append(1)
         elif row[2] == 'Observing'or row[2] == 'Science':
             statuses.append(2)
-        elif row[2] == 'Down' or row[2] == 'Info too old':
+        elif row[2] == 'Down' or row[2] == 'Info too old' or row[2] == 'Unlocked':
             statuses.append(0)
         else:
             statuses.append(1)
