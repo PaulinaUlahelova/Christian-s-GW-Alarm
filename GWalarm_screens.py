@@ -566,10 +566,10 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             i+=0.2
             time.sleep(0.2)
 
-class SkyPop(ModalView):
+class SkyPop(Screen):
     imgsource=StringProperty()
 
-class DevPop(ModalView):
+class DevPop(Screen):
     def simulate(self):
         global newevent_flag
         if newevent_flag == 0:
@@ -589,7 +589,8 @@ class DevPop(ModalView):
                 
             t = threading.Thread(target=process)
             t.start()
-            self.dismiss(animation=False)
+            self.manager.transition=NoTransition()
+            self.manager.current='main'
             Clock.schedule_once(lambda dt: t.join(),0)
         else:
             content = Label(text='The event is coming, be patient!')
@@ -602,8 +603,8 @@ class InfoPop(Screen):
     row=ObjectProperty()
     
     def update_skymap(self):
-        pop = SkyPop(imgsource=self.rowdict['skymap'])
-        pop.open()
+        self.manager.get_screen('sky').imgsource=self.rowdict['skymap']
+        self.manager.current = 'sky'
     def gloss_open(self):
         descdict = {'GraceID': 'Identifier in GraceDB', 'AlertType': 'VOEvent alert type', 
             'Instruments': 'List of instruments used in analysis to identify this event', 
@@ -1172,6 +1173,8 @@ class MyApp(App):
         sm.add_widget(PlotsScreen(name='plots'))
         sm.add_widget(StatBio(name='statinfo'))
         sm.add_widget(InfoPop(name='historypop'))
+        sm.add_widget(SkyPop(name='sky'))
+        sm.add_widget(DevPop(name='dev'))
         
         print('Initialised application...')
         return sm

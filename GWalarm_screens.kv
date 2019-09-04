@@ -79,84 +79,94 @@
             rectangle:self.x,self.y,self.width,self.height
 
 <DevPop>:
-    size_hint:0.5,0.7
-    TabbedPanel:
-        do_default_tab:False
-        tab_width:root.width/2
-        TabbedPanelItem:                
-            text: 'Team info!'
-            GridLayout:
-                canvas.before:
-                    Color:
-                        rgba: 0.9,0.9,0.9,1
-                    Rectangle:
-                        pos:self.pos
-                        size:self.size
-                rows:2
+    GridLayout:
+        rows:2
+        HisScreenButton:
+            size_hint_y:0.1
+            text:'Back to the Main Menu'
+            on_press:
+                app.root.transition=SlideTransition(direction='down')
+                app.root.current='main'
+        TabbedPanel:
+            size_hint_y:0.9
+            do_default_tab:False
+            tab_width:root.width/2
+            TabbedPanelItem:                
+                text: 'Team info!'
+                GridLayout:
+                    canvas.before:
+                        Color:
+                            rgba: 0.9,0.9,0.9,1
+                        Rectangle:
+                            pos:self.pos
+                            size:self.size
+                    rows:2
+                    BoxLayout:
+                        padding:5,5
+                        spacing:5
+                        orientation:'horizontal'
+                        size_hint_y:0.5
+                        DevImg:
+                            id:starter
+                            width:root.width/3-5
+                            surr_col:0.6,0.2,0.2,1
+                            source:'./IGR.jpg'
+                            bio:'text text text text text text text text text text text text text text text text text text text '
+                            on_press:
+                                devbio.text=self.bio; 
+                                self.surr_col=1,0.2,0.2,1
+                                second.surr_col=0.2,0.2,0.2,1
+                                third.surr_col=0.2,0.2,0.2,1
+                        DevImg:
+                            id:second
+                            source:'./BSorazu.jpg'
+                            width:root.width/3-5
+                            bio:'text'
+                            on_press:
+                                devbio.text=self.bio; 
+                                self.surr_col=1,0.2,0.2,1
+                                third.surr_col=0.2,0.2,0.2,1
+                                starter.surr_col=0.2,0.2,0.2,1
+                        DevImg:
+                            id:third
+                            width:root.width/3-5
+                            source:'./JVeitch.jpg'
+                            bio:'text'
+                            on_press:
+                                devbio.text=self.bio; 
+                                self.surr_col=1,0.2,0.2,1
+                                second.surr_col=0.2,0.2,0.2,1
+                                starter.surr_col=0.2,0.2,0.2,1
+                    Label:
+                        id:devbio
+                        text:starter.bio
+                        halign:'center'
+                        color:0,0,0,1
+                        text_size:root.width,None
+                        size_hint_y:0.33
+            
+            TabbedPanelItem:
+                text: 'Event Simulation'
                 BoxLayout:
-                    padding:5,5
-                    spacing:5
-                    orientation:'horizontal'
-                    size_hint_y:0.5
-                    DevImg:
-                        id:starter
-                        width:root.width/3-5
-                        surr_col:0.6,0.2,0.2,1
-                        source:'./IGR.jpg'
-                        bio:'text text text text text text text text text text text text text text text text text text text '
-                        on_press:
-                            devbio.text=self.bio; 
-                            self.surr_col=1,0.2,0.2,1
-                            second.surr_col=0.2,0.2,0.2,1
-                            third.surr_col=0.2,0.2,0.2,1
-                    DevImg:
-                        id:second
-                        source:'./BSorazu.jpg'
-                        width:root.width/3-5
-                        bio:'text'
-                        on_press:
-                            devbio.text=self.bio; 
-                            self.surr_col=1,0.2,0.2,1
-                            third.surr_col=0.2,0.2,0.2,1
-                            starter.surr_col=0.2,0.2,0.2,1
-                    DevImg:
-                        id:third
-                        width:root.width/3-5
-                        source:'./JVeitch.jpg'
-                        bio:'text'
-                        on_press:
-                            devbio.text=self.bio; 
-                            self.surr_col=1,0.2,0.2,1
-                            second.surr_col=0.2,0.2,0.2,1
-                            starter.surr_col=0.2,0.2,0.2,1
-                Label:
-                    id:devbio
-                    text:starter.bio
-                    halign:'center'
-                    color:0,0,0,1
-                    text_size:root.width,None
-                    size_hint_y:0.33
-        
-        TabbedPanelItem:
-            text: 'Event Simulation'
-            BoxLayout:
-                padding:root.width/6,root.height/6
-                canvas.before:
-                    Color:
-                        rgba:0.9,0.9,0.9,1
-                    Rectangle:
-                        pos:self.pos
-                        size:self.size
-                HisScreenButton:
-                    id:eventsendbutton
-                    text: 'Send an event trigger and \nsee what happens...'
-                    halign:'center'
-                    on_press:root.simulate()
+                    padding:root.width/6,root.height/6
+                    canvas.before:
+                        Color:
+                            rgba:0.9,0.9,0.9,1
+                        Rectangle:
+                            pos:self.pos
+                            size:self.size
+                    HisScreenButton:
+                        id:eventsendbutton
+                        text: 'Send an event trigger and \nsee what happens...'
+                        halign:'center'
+                        on_press:root.simulate()
 <DeveloperAboutButton@ButtonBehavior+BoxLayout>:
     img1:'./IGR.jpg'
     img2:'./UofG.jpg'
     labtext:'About the Team'
-    on_press:Factory.DevPop().open()
+    on_press:
+        app.root.transition=SlideTransition(direction='up')
+        app.root.current='dev'
     padding:0,2
     
     canvas.before:
@@ -944,7 +954,9 @@
             text:'Back to Event Parameters'
             font_size:dp(20)
             size_hint_y:0.1
-            on_press:root.dismiss()
+            on_press:
+                app.root.transition=SlideTransition(direction='up')
+                app.root.current='historypop'
 
 <SkymapButton@ButtonBehavior+AsyncImage>:
     source:'./IGR.jpg'
@@ -1168,7 +1180,9 @@
                 SkymapButton:
                     id:skybutton
                     source:root.rowdict['skymap']
-                    on_press:root.update_skymap()
+                    on_press:
+                        app.root.transition=SlideTransition(direction='down')
+                        root.update_skymap()
                     size_hint_y:0.35
 
                 BoxLayout:
