@@ -570,33 +570,7 @@ class SkyPop(Screen):
     imgsource=StringProperty()
 
 class DevPop(Screen):
-    def simulate(self):
-        global newevent_flag
-        if newevent_flag == 0:
-            #don't start if it's not safe
-
-            
-            def process():
-                payload=open("EventDemonstration.xml",'rb').read()
-                string='Thisisaneventsim'
-                root=lxml.etree.fromstring(payload)
-                payload+=string.encode()
-                process_gcn(payload,root)
-                global newevent_flag
-                newevent_flag=1
-                while newevent_flag == 1:
-                    time.sleep(0.5)
-                
-            t = threading.Thread(target=process)
-            t.start()
-            self.manager.transition=NoTransition()
-            self.manager.current='main'
-            Clock.schedule_once(lambda dt: t.join(),0)
-        else:
-            content = Label(text='The event is coming, be patient!')
-            popu = Popup(title="It's on the way...",content=content)
-            popu.open()
-            Clock.schedule_interval(lambda dt: popu.dismiss(),5)
+    pass
 
 class InfoPop(Screen):
     namelist=ObjectProperty()
@@ -878,6 +852,35 @@ class MainScreenv2(Screen):
         event_waiting_thread = threading.Thread(target=self.event_waiting)
         event_waiting_thread.start()
         
+    def simulate(self):
+        global newevent_flag
+        if newevent_flag == 0:
+            #don't start if it's not safe
+
+            
+            def process():
+                payload=open("EventDemonstration.xml",'rb').read()
+                string='Thisisaneventsim'
+                root=lxml.etree.fromstring(payload)
+                payload+=string.encode()
+                process_gcn(payload,root)
+                global newevent_flag
+                newevent_flag=1
+                while newevent_flag == 1:
+                    time.sleep(0.5)
+                self.ids.eventsendbutton.text='Send \nevent trigger...'
+
+            t = threading.Thread(target=process)
+            t.start()
+            self.manager.transition=NoTransition()
+            self.manager.current='main'
+            Clock.schedule_once(lambda dt: t.join(),0)
+        else:
+            content = Label(text='The event is coming, be patient!')
+            popu = Popup(title="It's on the way...",content=content)
+            popu.open()
+            Clock.schedule_interval(lambda dt: popu.dismiss(),5)
+
     def event_waiting(self):
         '''New event popup handler'''
         global newevent_flag
@@ -901,7 +904,7 @@ class MainScreenv2(Screen):
             #Close all active popups - prevents crashes if left unattended for a while.
             if 'historypop' in App.get_running_app().root.screen_names:
                 App.get_running_app().root.transition = NoTransition()
-                App.get_running_app().root.current = 'main'
+                App.get_running_app().root.get_screen('historypop').ids.but1.trigger_action(duration=0)
                 App.get_running_app().root.transition = SlideTransition()
 
             #Read in the new event
