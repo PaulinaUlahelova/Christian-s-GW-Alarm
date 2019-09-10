@@ -1002,7 +1002,6 @@ class MainScreenv2(Screen):
         pixels.show()
     
     def notif_off(self):
-        print('hello')
         self.notif_light_var = 0
     
     def read_event_params(self,paramdict,ev_type):
