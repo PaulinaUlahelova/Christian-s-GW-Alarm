@@ -1,6 +1,6 @@
 #:kivy 1.11.0
 #:import Factory kivy.factory.Factory
-#: import SlideTransition kivy.uix.screenmanager.SlideTransition
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
 
 <Image,AsyncImage>:
     nocache:True
@@ -968,16 +968,6 @@
                         Line:
                             width:1
                             rectangle:self.x,self.y,self.width,self.height
-
-#                    Label:
-#                        size_hint_y:0.7
-#                        padding:10,0
-#                        text_size:self.width,None
-#                        height:self.texture_size[1]
-#                        text:'[size=19dp] Welcome to the [b] event information [/b] page! [/size] [size=15dp] \n\nHere, you can find all the interesting info for a particular gravitational wave event. \n\nSwipe to the right to see where in the sky it may have come from! [/size]'
-#                        markup:True
-#                        color:0,0,0,1
-#                        halign: 'justify'
                     GridLayout:
                         rows:3
                         padding:0,10
@@ -1044,6 +1034,7 @@
                         text:'Back to Event History'
                         size_hint_y:0.15
                         on_press:
+                            root.manager.get_screen('main').notif_off()
                             root.manager.transition=SlideTransition(direction='left')
                             root.manager.current='history'
                         
@@ -1145,23 +1136,6 @@
                     AsyncImage:
                         source:root.rowdict['GraceID']+'_pie.png'
                         allow_stretch:True
-#    BoxLayout:
-#        HisScreenButton:
-#            id:but2
-#            text:'Back to \n Event \n History'
-#            size_hint:(0.1,0.3)
-#            on_press:
-#                root.manager.transition=SlideTransition(direction='left')
-#                root.manager.current='history'
-#            text_size:root.width,None
-#            halign:'center'
-#            valign:'top'
-#        AsyncImage:
-#            source:root.rowdict['skymap'] 
-#            size_hint_x:0.8
-#        Label:
-#            size_hint_x:0.1      
-
 <PlotContainer@GridLayout>:
     imsource:'test'
     desc:'test'

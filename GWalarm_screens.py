@@ -615,6 +615,7 @@ class InfoPop(Screen):
     def on_pre_enter(self):
         self.var = 0    
         self.speak =0
+
     def on_leave(self):
         if len(App.get_running_app().root.get_screen('historypop').ids.header.children) == 4:
             App.get_running_app().root.get_screen('historypop').ids.header.remove_widget(App.get_running_app().root.get_screen('historypop').ids.header.children[0])
@@ -902,7 +903,7 @@ class MainScreenv2(Screen):
                 time.sleep(5)
             
             #Close all active popups - prevents crashes if left unattended for a while.
-            if 'historypop' in App.get_running_app().root.screen_names:
+            if 'historypop' in App.get_running_app().root.current:
                 App.get_running_app().root.transition = NoTransition()
                 App.get_running_app().root.get_screen('historypop').ids.but1.trigger_action(duration=0)
                 App.get_running_app().root.transition = SlideTransition()
@@ -965,9 +966,6 @@ class MainScreenv2(Screen):
             App.get_running_app().root.get_screen('historypop').row = orderedrow
             extralabel = Label(text='[b]NEW EVENT[/b]',markup=True,font_size=20,halign='left',color=[0,0,0,1],size_hint_x=0.2)
             App.get_running_app().root.get_screen('historypop').ids.header.add_widget(extralabel)
-            if pixels:
-                App.get_running_app().root.get_screen('historypop').ids.but1.bind(on_press=self.notif_off)
-                App.get_running_app().root.get_screen('historypop').ids.but2.bind(on_press=self.notif_off)
 
             '''Now that we're ready, sound the alarms'''
             if buzzPin is not None:
@@ -1003,7 +1001,8 @@ class MainScreenv2(Screen):
         pixels[0] = (0,0,0)
         pixels.show()
     
-    def notif_off(self,instance):
+    def notif_off(self):
+        print('hello')
         self.notif_light_var = 0
     
     def read_event_params(self,paramdict,ev_type):
