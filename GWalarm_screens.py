@@ -330,7 +330,7 @@ class HistoryScreenv2(Screen):
                 break
         
         def receive():
-                gcn.listen(host="209.208.78.170",handler=process_gcn)
+                gcn.listen(host="68.169.57.253",handler=process_gcn)
         t4 = threading.Thread(target=receive,daemon=True,name='gcnthread')
         t4.start()
             
@@ -340,9 +340,9 @@ class HistoryScreenv2(Screen):
         specialnames=['GraceID','Distance','Instruments','FAR','UpdateTime']
 
         lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
-        backcolors = [[202/255,214/255,235/255,0.8],[179/255,242/255,183/255,0.8],
-                      [238/255,242/255,179/255,0.8],[231/255,179/255,242/255,0.8],
-                      [242/255,179/255,179/255,0.8]]
+        backcolors = [[202/255,214/255,235/255,1],[179/255,242/255,183/255,1],
+                      [238/255,242/255,179/255,1],[231/255,179/255,242/255,1],
+                      [242/255,179/255,179/255,1]]
         
         for child in self.ids.HisCols.children:
             child.names = names
@@ -350,17 +350,15 @@ class HistoryScreenv2(Screen):
         t2.start()
         
     def stupid(obj):
-        def refresh_all(arg):
-            sync_database()
-            #Wait for it to finish....
-        content = Button(text='Ok')
-        content.bind(on_press = lambda arg: content.unbind(on_press=refresh_all))
-        content.bind(on_press=refresh_all)
+        def wait_and_close(pop):
+            pop.content.unbind(on_press=wait_and_close)
+            pop.content.text='Updating. \nPlease wait.'
+            Clock.schedule_once(lambda dt:sync_database(),0)
+            pop.dismiss()
+        content = Button(text='Update Database \n(takes time)',halign='center')
         confirm = Popup(title='Are you sure?',content=content,size_hint=(0.4,0.4))
-        confirm.open()
-        content.bind(on_press=confirm.dismiss)
-
-        
+        content.bind(on_press=lambda arg: wait_and_close(confirm))
+        confirm.open()        
         
 def oom_to_words(inputval,unit,tts='off'):
     far_oom = int(math.log10(inputval))
@@ -466,6 +464,8 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             
             '''Iterate through all events, re-drawing row-by-row the history viewer'''
             for table in tables:
+                if 'EventSimulation' in table.name:
+                    continue
                 row=table[-1]
                 if 'Time' in sorttype:
                     sort_vars.append(row['UpdateTime'].decode().split()[0])
@@ -499,6 +499,8 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                         tables=tables2
             new_data = []
             for i,table in enumerate(tables):
+                if 'EventSimulation' in table.name:
+                    continue
                 to_add_to_data={}
                 row = table[-1]
                 orderedrow = []
@@ -547,8 +549,16 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             rv.data = new_data
             
             print('Event History Updated...')
-            if pixels:
-                type_notif(rv.winner)
+
+            
+            def update_notif(val):
+                if pixels and val not in App.get_running_app().root.get_screen('main').notif_light_current:
+                    type_notif(val)
+                App.get_running_app().root.get_screen('main').notif_light_current=val
+
+            Clock.schedule_once(lambda dt:update_notif(rv.winner),0)
+            
+            
             h5file.close()
             #reset the flag
             first = 0
@@ -847,6 +857,7 @@ class VolSlider(BoxLayout):
 
 class MainScreenv2(Screen):
     notif_light_var=NumericProperty(0)
+    notif_light_current = StringProperty()
 
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
@@ -870,6 +881,7 @@ class MainScreenv2(Screen):
                 while newevent_flag == 1:
                     time.sleep(0.5)
                 self.ids.eventsendbutton.text='Send \nevent trigger...'
+                
 
             t = threading.Thread(target=process)
             t.start()
@@ -1003,6 +1015,9 @@ class MainScreenv2(Screen):
     
     def notif_off(self):
         self.notif_light_var = 0
+        print(self.notif_light_current)
+        if pixels:
+            type_notif(self.notif_light_current)
     
     def read_event_params(self,paramdict,ev_type):
         if ev_type == 'Terrestrial':
@@ -1064,7 +1079,6 @@ class MainScreenv2(Screen):
             t.join()
         maximum = k
         for i in range(maximum+1):
-            print(i)
             os.system("mpg321 --stereo readout"+str(i)+".mp3")
         
 class StatusScreenv2(Screen):
