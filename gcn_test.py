@@ -72,12 +72,81 @@ def process_gcn(payload, root):
               elem.attrib['value']
               for elem in root.iterfind('.//Param')}
     descs = [elem.text for elem in root.iterfind('.//Description')]
+    
+    while True:
+        try:
+            h5file = open_file("Event Database",mode="a",title="eventinfo")
+            break
+        except:
+            time.sleep(0.5)
+    try:
+        h5file.create_group("/",'events')
+    except NodeError:
+        pass
+    
+    widgetids= [node.name for node in h5file.list_nodes("/events")]
 
+    if sim == False:
+        try:
+            table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
+        except:
+            table=h5file.get_node("/events",params['GraceID'])
+    else:
+        try:
+            table = h5file.create_table(h5file.root.events,'EventSimulation',Event,'Simulation')
+        except:
+            table=h5file.get_node("/events",'EventSimulation')
+            
+    #Check if the current revision of this event exists - if it does, nothing else needs to be done!  
+    if params['AlertType'] == 'Retraction':
+        #Remove the event info if a retraction is issued - we don't care anymore
+        print(params['GraceID'],' retracted.')
+        try:
+            h5file.remove_node("/events",params['GraceID'])
+        except:
+            pass
+        h5file.close()
+        return
+    
+    if params['GraceID'] in widgetids and sim == False:
+        if params['Pkt_Ser_Num'] == table[-1]['Revision'].decode():
+            h5file.close()
+            print(params['GraceID'] +' already up to date.')
+            return
+        else:
+            print(params['GraceID'] +' updating...')
+    elif sim == True:
+        print('Simulation processing...')
+    else:
+        print(params['GraceID'] +' event adding...')
+    h5file.close()
+    
+    lookoutfor = ['BBH','BNS','MassGap','NSBH','Terrestrial']
+    lookoutfor2=['HasNS','HasRemnant']
+    order = []
+    order2=[]
+    vals = []
+    vals2=[]
+    descriptions={}
+    i=0
 
+    det_time = root.find('.//ISOTime')
+    det_text = det_time.text
+    [one,two] = det_text.split('T')
+    one=one.replace(':','-')
+    two = two.split('.')[0]
+    det_formtime = one+' at '+two
+
+    
+    upt_time = root.find('.//Date')
+    upt_text = upt_time.text
+    [one1,two1] = upt_text.split('T')
+    one1=one1.replace(':','-')
+    two1=two1.split('.')[0]
+    upt_formtime = one1+' at '+two1
+
+    #print(descriptions)
     #prepare path for localization skymap, then download and produce the map in png format
-    #filepath = params['skymap_fits']
-    #fitspath = './map_to_convert.fits.gz'
-
     filesurl = "https://gracedb.ligo.org/superevents/"+params['GraceID']+"/files/"
     skymap = params['GraceID']+'.png'
     r =requests.get(filesurl)
@@ -100,12 +169,6 @@ def process_gcn(payload, root):
         plt.imsave(skymap,img[100:475,50:750,:])
     t=threading.Thread(target=download,args=(imgfilepath,skymap))
     t.start()
-
-    '''Skymap img resizing (done by trial and error beforehand)'''
-
-    #os.system("curl -0 "+filepath + '> ' + fitspath)
-    #os.system("ligo-skymap-plot map_to_convert.fits.gz"+" -o "+skymap+" --annotate --contour 50 90 --geo")
-
     if any('bayestar.html' in s for s in all_files):
         htmllinks = [s for s in all_files if 'bayestar.html' in s]
     htmlfile = htmllinks[-1]
@@ -121,43 +184,23 @@ def process_gcn(payload, root):
             diststd= str("{0:.0f}".format(float(diststd)))
     finaldist = dist + ' +- '+diststd + ' Mpc'
 
-
-    lookoutfor = ['BBH','BNS','MassGap','NSBH','Terrestrial']
-    lookoutfor2=['HasNS','HasRemnant']
-    order = []
-    order2=[]
-    vals = []
-    vals2=[]
-    descriptions={}
-    # Print all parameters.
-    i=0
-
-    print(params['GraceID'])
-
     while True:
         try:
             h5file = open_file("Event Database",mode="a",title="eventinfo")
             break
         except:
-            time.sleep(1)
+            time.sleep(0.5)
     try:
         h5file.create_group("/",'events')
     except NodeError:
         pass
 
-    if params['AlertType'] == 'Retraction':
-        #Remove the event info if a retraction is issued - we don't care anymore
-        #FIXME: in future flag the event instead and display seperately for interest/ref
-        try:
-            h5file.remove_node("/events",params['GraceID'])
-        except:
-            pass
-        h5file.close()
-        return
-    
+
     if params['Group'] != 'CBC':
         return
     
+    widgetids= [node.name for node in h5file.list_nodes("/events")]
+
     if sim == False:
         try:
             table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
@@ -169,8 +212,8 @@ def process_gcn(payload, root):
         except:
             table=h5file.get_node("/events",'EventSimulation')
     det_event = table.row
+    #    
     for key, value in params.items():
- #       print(key, '=', value)
         if key == 'FAR':
             per_yr = float(value)*scipy.constants.year
             if per_yr <= 1:
@@ -214,29 +257,15 @@ def process_gcn(payload, root):
                 i+=1
                 continue
         i+=1
-    #print(descriptions)
+
+
     det_event['skymap'] = skymap
     det_event['Distance'] = finaldist
-    det_time = root.find('.//ISOTime')
-    det_text = det_time.text
-    [one,two] = det_text.split('T')
-    one=one.replace(':','-')
-    two = two.split('.')[0]
-    det_formtime = one+' at '+two
-
     det_event['DetectionTime']=det_formtime
-    
-    upt_time = root.find('.//Date')
-    upt_text = upt_time.text
-    [one1,two1] = upt_text.split('T')
-    one1=one1.replace(':','-')
-    two1=two1.split('.')[0]
-    upt_formtime = one1+' at '+two1
     det_event['UpdateTime'] = upt_formtime
     det_event.append()
     table.flush()
     h5file.close()
-
     '''PLOTTING'''
     if sim:  
         pass

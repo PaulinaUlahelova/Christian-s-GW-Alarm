@@ -16,7 +16,7 @@ def sync_database():
     import sys
     import time
     sys.setrecursionlimit(100000)
-    
+    now=time.time()
     #Get old links by parsing properly, and download + save to file!
     
     if os.path.basename(os.getcwd()) != "event_data":
@@ -38,9 +38,6 @@ def sync_database():
         return tag.has_attr('style') and not tag.has_attr('class')
     
     for col in soup.tbody.find_all("tr"):
-        #print(row)
-        #for col in row("tr"):
-        #link = col.find(hasstylenotclass).a.extract()
         name = col.find(hasstylenotclass).a.string
         eventnames.append(name)
         eventlinks.append("https://gracedb.ligo.org/superevents/"+name+"/files/")
@@ -52,32 +49,20 @@ def sync_database():
         all_files = [a['href'] for a in soup.find_all("a")]
         
         bestfiles = []
-        imglinks = []
-        retracted = 0
         if any('Retract' in s for s in all_files):
             bestfiles= [s for s in all_files if 'Retract' in s]
-            retracted = 1
         elif any('Update' in s for s in all_files):
             bestfiles = [s for s in all_files if 'Update' in s]
         elif any('Initial' in s for s in all_files):
             bestfiles= [s for s in all_files if 'Initial' in s]
         else:
             bestfiles = [s for s in all_files if 'Preliminary' in s]            
-        if any('LALInferenceOffline.png' in s for s in all_files):
-            imglinks = [s for s in all_files if 'LALInferenceOffline.png' in s]
-        else:
-            imglinks = [s for s in all_files if 'bayestar.png' in s]
         
-        imgfile = imglinks[-1]
         datafile = bestfiles[-1]
         
-        imgfilepath = "https://gracedb.ligo.org"+imgfile
         datafilepath = "https://gracedb.ligo.org"+datafile
         
-        imgpath = evname+'.png'
         datapath = 'ToRead'+evname+'.xml'
-        if retracted != 1:
-            os.system("curl --silent -0 "+imgfilepath + '> ' + './'+imgpath)
         os.system("curl --silent -0 "+datafilepath + '> ' + './'+datapath)
 
         payload = open(datapath,'rb').read()
@@ -105,4 +90,5 @@ def sync_database():
     for file in os.listdir():
         if 'ToRead' in file:
             os.remove(file)
+    print('sync complete in time ',time.time()-now)
 #sync_database()
