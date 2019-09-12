@@ -103,7 +103,7 @@
     
     canvas.before:
         Color:
-            rgba:1,173/255,158/255,1 
+            rgba:1,100/255,100/255,1
         Rectangle:
             size:self.size
             pos:self.pos
@@ -178,7 +178,7 @@
             BoxLayout:
                 padding:[0,30,0,0]
                 Label:
-                    text:'Gravitational Wave Alarm.'
+                    text:'Gravitational Wave Alarm'
                     font_size:dp(52)
                     size_hint_x:0.8
                 Label:
@@ -187,7 +187,7 @@
                 padding:[30,0,0,0]
                 Label:
                     size_hint_x:0.8
-                    text:"A real-time link with the world's gravitational wave observing network."
+                    text:"A real-time link with the world's network of gravitational wave detectors."
                     font_size:dp(20)
             Label:
                 size_hint_y:0.1
@@ -204,14 +204,14 @@
             
             LabButton:
                 name:'history'
-                titletext:'[b] Event History [/b]'
-                texty:'Browse detailed profiles on all events detected so far in Observing Run 3 (O3)'
+                titletext:'[b] Candidate Event History [/b]'
+                texty:'Browse detailed profiles on up-to-date list of candidate events in the 3rd Observing Run (O3)'
                 imgsource:'./LIGO Hanford.jpg'
                 dir:'right'
             LabButton:
                 name:'status'
-                titletext:'[b] Detector Status [/b]'
-                texty:"Monitor the activities of the world's largest GW observatories"
+                titletext:'[b] Detector Network Status [/b]'
+                texty:"Monitor the status of the world's network of gravitational wave interferometric detectors."
                 imgsource:'./LIGO Livingston.jpg'
                 dir:'left'
                 
@@ -229,8 +229,9 @@
             
             HisScreenButton:
                 id:eventsendbutton
-                text: 'Send \nevent trigger...'
+                text: 'Generate\ntest event'
                 halign:'center'
+                col: 0.77,0.184,0.29,1
                 on_press:
                     self.text = "It's on \nthe way..."
                     root.simulate()
@@ -587,6 +588,7 @@
                 size_hint_y:0.7
             Button:
                 text:'Return to Detector Summary'
+                background_color: 0.035,0.4,0.94,1
                 on_press:root.change()
                 size_hint_y:0.1
                 size_hint_x:0.5
@@ -748,7 +750,8 @@
                     width: 2
                     points: [self.x, self.y+self.height, self.x+self.width,self.y+self.height]
             HisScreenButton:
-                text:'Database Refresh (takes ~2min)'
+                text:'Refresh database (~ 30secs)'
+                col: 0.77,0.184,0.29,1
                 on_press:root.stupid()
                 canvas:
                     Color:
@@ -1188,8 +1191,8 @@
                 on_press:
                     plotcaro.index=0
                     self.col=0.2,0.25,0.6,1
-                    pbut2.col=0.2,0.25,0.4,1
-                    pbut3.col=0.2,0.25,0.4,1
+                    pbut2.col=0.035,0.4,0.94,1
+                    pbut3.col=0.035,0.4,0.94,1
                 canvas.before:
                     Color:
                         rgba:0.2,0.2,0.2,1
@@ -1200,11 +1203,12 @@
             HisScreenButton:
                 id:pbut2
                 text: "Today's Status History"
+                col:0.035,0.4,0.94,1
                 on_press:
                     plotcaro.index=1
                     self.col=0.2,0.25,0.6,1
-                    pbut1.col=0.2,0.25,0.4,1
-                    pbut3.col=0.2,0.25,0.4,1
+                    pbut1.col=0.035,0.4,0.94,1
+                    pbut3.col=0.035,0.4,0.94,1
                 canvas.before:
                     Color:
                         rgba:0.2,0.2,0.2,1
@@ -1216,11 +1220,12 @@
             HisScreenButton:
                 id:pbut3
                 text:'BNS Inspiral Detection Ranges'
+                col:0.035,0.4,0.94,1
                 on_press:
                     plotcaro.index=2
                     self.col=0.2,0.25,0.6,1
-                    pbut2.col=0.2,0.25,0.4,1
-                    pbut1.col=0.2,0.25,0.4,1
+                    pbut2.col=0.035,0.4,0.94,1
+                    pbut1.col=0.035,0.4,0.94,1
 
         Carousel:
             id:plotcaro
