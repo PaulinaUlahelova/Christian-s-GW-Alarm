@@ -724,7 +724,11 @@ def plotupdate(obj):
             datestring = sort_date[0]+sort_date[1]+sort_date[2]
             url = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/"
             url2 = "https://www.gw-openscience.org/detector_status/day/"+datestring+"/instrument_performance/analysis_time/"
-            resp=requests.get(url)
+            try:
+                resp=requests.get(url)
+            except:
+                print ('ERROR: Issues requesting website:  ' + url + '\n')
+                pass
             r = resp.text
             while True:
                 if 'Not Found' in str(r):
@@ -736,7 +740,12 @@ def plotupdate(obj):
                     
 
                 '''check the first link to make sure it actually loads - problem occurs at midnight GMT'''
-                resp=requests.get(url)
+                try:
+                    resp=requests.get(url)
+                except:
+                    print ('ERROR: Issues requesting website:  ' + url + '\n')
+                    pass
+                
                 r = resp.text
                 soup=BeautifulSoup(r,"lxml")
                 
@@ -754,7 +763,12 @@ def plotupdate(obj):
                     r+='Not Found'
                     continue
             soup=BeautifulSoup(r,"lxml")
-            resp2 = requests.get(url2)
+            try:
+                resp2 = requests.get(url2)
+            except:
+                print ('ERROR: Issues requesting website:  ' + url2 + '\n')
+                pass
+            
             r2 = resp2.text
             soup2 = BeautifulSoup(r2,"lxml")
         except:
@@ -1093,7 +1107,7 @@ class StatusScreenv2(Screen):
         self.bios=(['LIGO Livingston is one of two ground-based GW detectors, of 2nd generation, built in the USA. The observatory uses state-of-ther-art technology to achieve the most precise measurement of displacement. It can detect a change in the 4 km mirror spacing of less than a ten-thousandth the diameter of a proton. \nForming a pair seperated by over 3000km, LIGO Hanford and Livingston observed gravitational waves for the first time in history on 14 September 2015.',
                        'LIGO Hanford is the 2nd ground-based GW detectors, of 2nd generation, built in the USA (together with LIGO Livingston). Ground-based interferometric detectors use light interference to measure changes in the distance between mirrors that are kms appart. Gravitational waves stretch and shrink each arm of the interferometer alternatively changing the distance between mirrors. The longer the arms (distance between mirrors) the bigger the effect caused by gravitational waves.',
                        'GEO600 is a gravitational wave detector located in Hanover, Germany (designed and operated with the UK). Although of smaller arm length (600m folded arms), the detector has comparable sensitive to Virgo above 2kHz. However at lower frequencies (~100Hz region) its sensitivity is 2 orders of magnitude lower than 2nd generation detectors. GEO 600 has been a vital proof of concept for many advanced technologies and features that are common to 2nd generation detectors.',
-                       "The Virgo interferometer is Europe's largest to date, with 3km long arms. It is located near Pisa, Italy. Of similar sensitivity to LIGO detectors of 2nd generation, they have agreed to share and jointly analyse the data recorded by the network of detectors and to jointly publish their results. The more sensitive GW detectors become, the further they can see gravitational waves, which then increases the number of potential sources and the probability of a detection.\n Virgo and LIGO detectors contributed to the 1st gravitational wave detection of the merger of two neutron stars, in  17 August 2017, first ever detection with electromagnetic counterparts.", 
+                       "The Virgo interferometer is Europe's largest to date, with 3km long arms. It is located near Pisa, Italy. It is a 2nd generation detector, of similar sensitivity to LIGO detectors. The more sensitive GW detectors become, the further they can see gravitational waves, which then increases the number of potential sources and the probability of a detection.\n Virgo and LIGO detectors contributed to the 1st gravitational wave detection of the merger of two neutron stars in  17 August 2017. The first ever detection with electromagnetic counterparts.", 
                        "The Kamioka Gravitational Wave Detector (KAGRA) will be the world's first underground gravitational wave observatory. It is constructed in the Kamioka mine, Japan. This detector will utilise cryogenic cooling to reduce the temperature of the mirrors and so minimize thermal noise in the measuring process. It will be operational towards the end of 2019 although far from its design sensitivity and soon after will join the 3rd Observing run with the rest of the network of detectors."])
         t = threading.Thread(target=statusupdate,args=(self,),daemon=True)
         t.start()
@@ -1111,9 +1125,9 @@ class StatusScreenv2(Screen):
         def change(presser):
             App.get_running_app().root.current='statinfo'
             propers = presser.prop
-            if propers[2] == 'N/A':
+            if propers[2] == 'N/A' or propers[2] == '':
                 propers[2] = ''
-            else:
+            elif propers[2][1:4] != 'for':
                 propers[2] = ' for ' + propers[2]
             App.get_running_app().root.current_screen.detlist = propers
             App.get_running_app().root.current_screen.bio = presser.bio

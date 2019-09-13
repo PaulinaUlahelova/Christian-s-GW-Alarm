@@ -10,7 +10,12 @@ def statusdetect():
     from bs4 import BeautifulSoup 
     import requests 
     url = "https://ldas-jobs.ligo.caltech.edu/~gwistat/gwistat/gwistat.html"
-    r =requests.get(url) 
+    try:
+        r =requests.get(url) 
+    except:
+        print ('ERROR: Issues requesting website:  ' + url + '\n')
+        pass
+
     soup = BeautifulSoup(r.text,"lxml")
     names = ['GEO 600','LIGO Hanford','LIGO Livingston','Virgo','KAGRA']
     detrows = []
