@@ -14,9 +14,12 @@ def statusdetect():
         r =requests.get(url) 
     except:
         print ('ERROR: Issues requesting website:  ' + url + '\n')
+        r=''
         pass
-
-    soup = BeautifulSoup(r.text,"lxml")
+    if hasattr(r, 'text'):
+        soup = BeautifulSoup(r.text,"lxml")
+    else:
+        soup = BeautifulSoup(r,"lxml")
     names = ['GEO 600','LIGO Hanford','LIGO Livingston','Virgo','KAGRA']
     detrows = []
     to_add=[]
