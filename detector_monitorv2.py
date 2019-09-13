@@ -20,6 +20,8 @@ def statusdetect():
         soup = BeautifulSoup(r.text,"lxml")
     else:
         soup = BeautifulSoup(r,"lxml")
+#    if '404' in str(soup):
+#        print('404')
     names = ['GEO 600','LIGO Hanford','LIGO Livingston','Virgo','KAGRA']
     detrows = []
     to_add=[]
@@ -68,5 +70,13 @@ def statusdetect():
             toput=[229/255,237/255,78/255,0.7]
         temp=[row[0],row[2],row[3],toput]
         export.append(temp)
-    export[0],export[2] = export[2],export[0]
+    try:
+        export[0],export[2] = export[2],export[0]
+    except:
+        export = []
+        statuses=[]
+        for i in range(0,5):
+            export.append(['Website','is','down.',[236/255,23/255,23/255,0.7]])
+            statuses.append(0)
+            
     return export,statuses, names
