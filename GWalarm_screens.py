@@ -728,8 +728,12 @@ def plotupdate(obj):
                 resp=requests.get(url)
             except:
                 print ('ERROR: Issues requesting website:  ' + url + '\n')
+                resp=''
                 pass
-            r = resp.text
+            if hasattr(resp, 'text'):
+                r = resp.text
+            else:
+                r = resp
             while True:
                 if 'Not Found' in str(r):
                     date = date - datetime.timedelta(days=1)
@@ -744,9 +748,12 @@ def plotupdate(obj):
                     resp=requests.get(url)
                 except:
                     print ('ERROR: Issues requesting website:  ' + url + '\n')
+                    resp=''
                     pass
-                
-                r = resp.text
+                if hasattr(resp, 'text'):
+                    r = resp.text
+                else:
+                    r = resp
                 soup=BeautifulSoup(r,"lxml")
                 
                 try:
@@ -767,9 +774,12 @@ def plotupdate(obj):
                 resp2 = requests.get(url2)
             except:
                 print ('ERROR: Issues requesting website:  ' + url2 + '\n')
+                resp2=''
                 pass
-            
-            r2 = resp2.text
+            if hasattr(resp, 'text'):
+                r2 = resp2.text
+            else:
+                r2 = resp2
             soup2 = BeautifulSoup(r2,"lxml")
         except:
             print("URL Error: URL to the Range plots is broken : check online")                
