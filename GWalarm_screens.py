@@ -168,7 +168,7 @@ class HisColLabel(ToggleButtonBehavior,Label):
             self.imgsource='./descending.png'
         t2 = threading.Thread(target=historyUpdatev2,args=(App.get_running_app().root.get_screen('history').ids.rv,
                                                          self.names,self.specialnames,self.lookout,
-                                                         self.backcolors,self.newsort),daemon=True)
+                                                         self.backcolors,self.newsort,App.get_running_app().root.get_screen('history').current_key),daemon=True)
         t2.start()
 
 class EventInfoHeader(GridLayout):
@@ -301,6 +301,9 @@ class EventInfoHeader(GridLayout):
     
 
 class HistoryScreenv2(Screen):
+    names = ObjectProperty()
+    current_key = ObjectProperty()
+    
     def __init__(self,**kwargs):
         super().__init__(**kwargs)
         if os.path.basename(os.getcwd()) != "event_data":
@@ -334,7 +337,7 @@ class HistoryScreenv2(Screen):
         t4 = threading.Thread(target=receive,daemon=True,name='gcnthread')
         t4.start()
             
-        names = tables.colnames
+        self.names = tables.colnames
 #        num_events = len(h5file.list_nodes(where="/events",classname="Table"))
         h5file.close()
         specialnames=['GraceID','Distance','Instruments','FAR','UpdateTime']
@@ -345,8 +348,8 @@ class HistoryScreenv2(Screen):
                       [242/255,179/255,179/255,1]]
         
         for child in self.ids.HisCols.children:
-            child.names = names
-        t2 = threading.Thread(target=historyUpdatev2,args=(self.ids.rv,names,specialnames,lookoutfor,backcolors,'Time Descending'),daemon=True)
+            child.names = self.names
+        t2 = threading.Thread(target=historyUpdatev2,args=(self.ids.rv,self.names,specialnames,lookoutfor,backcolors,'Time Descending'),daemon=True)
         t2.start()
         
     def stupid(obj):
@@ -396,15 +399,57 @@ def process_FAR(FAR,tts='off'):
     if type(FAR) is not float:
         FAR = float(FAR)
     per_yr = FAR*scipy.constants.year
-    if per_yr <= 1:
-        oneinyr = 1/per_yr
-    else:
-        oneinyr = per_yr
+    #if per_yr <= 1:
+    oneinyr = 1/per_yr
+    #else:
+    #    oneinyr = per_yr
         
     val = 'One every ' + oom_to_words(oneinyr,'years',tts)
     return val
+
+class KeyLabel(ToggleButtonBehavior,GridLayout):
+    primed=NumericProperty()
+    def on_press(self):
+        self.primed=1
+        for child in self.parent.children:
+            if 'KeyLabel' in str(child):
+                if child.primed != 1:
+                    child.back_color=[0.9,0.9,0.9,1]
+
+    def on_state(self,widget,value):
+        Clock.schedule_once(lambda dt: self.on_state_for_real(widget,value),0)
+    def on_state_for_real(self,widget,value):
+        his = App.get_running_app().root.get_screen('history')
+        def up(self):
+            self.back_color=[0.9,0.9,0.9,1]
+            if self.primed == 0:
+                return
+            global flag
+            flag = 1
+            
+            histhread = threading.Thread(target=historyUpdatev2,args=(his.ids.rv,
+                                                         his.names,his.specialnames,his.lookoutfor,
+                                                         his.backcolors,his.current_sort),daemon=True)
+            histhread.start()
+            App.get_running_app().root.get_screen('history').current_key = 'None'
+            self.primed=0
+        def down(self):
+            self.back_color=[195/255,209/255,219/255,1]
+            global flag
+            flag = 1
+            histhread = threading.Thread(target=historyUpdatev2,args=(his.ids.rv,
+                                                         his.names,his.specialnames,his.lookoutfor,
+                                                         his.backcolors,his.current_sort,self.key),daemon=True)
+            
+            histhread.start()
+            App.get_running_app().root.get_screen('history').current_key = self.key
+            self.primed=0
+        if value == 'down':
+            Clock.schedule_once(lambda dt: down(self),0) 
+        else:
+            Clock.schedule_once(lambda dt: up(self),0)
     
-def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending'):
+def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time Descending',keytype = 'None'):
     print('Begin History update')
     '''An important function that is responsible for populating and repopulating the history screen.'''
     
@@ -463,6 +508,9 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                 widgetids= [elem['row'][idindex] for elem in rv.data]
             
             '''Iterate through all events, re-drawing row-by-row the history viewer'''
+            def update_sort_type():
+                App.get_running_app().root.get_screen('history').current_sort=sorttype
+            Clock.schedule_once(lambda dt: update_sort_type())
             for table in tables:
                 if 'EventSimulation' in table.name:
                     continue
@@ -501,8 +549,17 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             for i,table in enumerate(tables):
                 if 'EventSimulation' in table.name:
                     continue
+
                 to_add_to_data={}
                 row = table[-1]
+                
+                stats = []
+                for name in lookoutfor:
+                    stats.append(float(row[name].decode().strip('%')))
+
+                if keytype != 'None':
+                    if keytype not in lookoutfor[np.argmax(stats)]:
+                        continue
                 orderedrow = []
                 to_add_to_data['namelist']=names
                 to_add_to_data['name']=row['GraceID'].decode()
@@ -537,9 +594,6 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                         to_add_to_data['text'+str(j+1)]=string.decode().split('at')[1].rstrip()
                     else:
                         to_add_to_data['text'+str(j)] = string.decode()
-                stats = []
-                for name in lookoutfor:
-                    stats.append(float(row[name].decode().strip('%')))
                 to_add_to_data['bgcol'] = backcolors[np.argmax(stats)]
                 new_data.append(to_add_to_data)
                 
