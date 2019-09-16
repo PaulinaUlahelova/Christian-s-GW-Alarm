@@ -10,10 +10,8 @@ import kivy
 kivy.require('1.11.0')
 
 from kivy.config import Config
-Config.set('graphics','fullscreen',1)
 Config.set('graphics','width','800')
 Config.set('graphics','height','480')
-
 Config.set('kivy','default_font',[
            './fonts/OpenSans-Light.ttf','./fonts/OpenSans-Regular.ttf','./fonts/OpenSans-LightItalic.ttf',
            './fonts/OpenSans-Bold.ttf'])
@@ -59,8 +57,11 @@ import math
 import scipy.constants
 import calendar
 
+
 '''CHECK IF ON RASPBERRY PI FOR GPIO FUNCTIONALITY'''
 if os.uname()[4][:3] == 'arm':
+    Config.set('graphics','borderless',1)
+    Config.set('graphics','width','800')
 
     import RPi.GPIO as GPIO
     buzzPin=5
