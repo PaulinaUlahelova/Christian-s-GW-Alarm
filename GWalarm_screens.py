@@ -61,7 +61,8 @@ import calendar
 '''CHECK IF ON RASPBERRY PI FOR GPIO FUNCTIONALITY'''
 if os.uname()[4][:3] == 'arm':
     Config.set('graphics','borderless',1)
-    Config.set('graphics','width','800')
+    Config.set('graphics','show_cursor',0)
+    Config.set('graphics','allow_screensaver',0)
 
     import RPi.GPIO as GPIO
     buzzPin=5
