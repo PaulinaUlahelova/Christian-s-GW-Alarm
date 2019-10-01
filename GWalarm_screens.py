@@ -18,6 +18,7 @@ Config.set('kivy','default_font',[
 
 import threading
 import time
+import socket
 from kivy.app import App
 from kivy.uix.button import Button
 from kivy.uix.gridlayout import GridLayout
@@ -56,7 +57,6 @@ import lxml
 import math
 import scipy.constants
 import calendar
-
 
 '''CHECK IF ON RASPBERRY PI FOR GPIO FUNCTIONALITY'''
 if os.uname()[4][:3] == 'arm':
@@ -268,7 +268,7 @@ class EventInfoHeader(GridLayout):
         
                 renderthreads = []
                 def render_audio(token,num):
-                    print(token)
+#                    print(token)
                     tts=gTTS(token)
                     tts.save('readout'+num+'.mp3')
                     
@@ -337,7 +337,19 @@ class HistoryScreenv2(Screen):
                 break
         
         def receive():
-                gcn.listen(host="68.169.57.253",handler=process_gcn)
+            hostnames=["209.208.78.170 Atlantic_2","45.58.43.186 Atlantic_3","50.116.49.68 Linode", "68.169.57.253 eApps"]
+            i=0
+            import logging
+            log = logging.getLogger('gcn.listener')
+            handle = logging.StreamHandler()
+            handle.setLevel(logging.INFO)
+            log.addHandler(handle)
+            log.setLevel(10)
+            try:
+                print('Connecting to '+hostnames[i].split()[1]+'...')
+                gcn.listen(host=hostnames[i].split()[0],handler=process_gcn,log=log)
+            except socket.timeout:
+                print('stopped')
         t4 = threading.Thread(target=receive,daemon=True,name='gcnthread')
         t4.start()
             
@@ -763,6 +775,8 @@ def plotupdate(obj):
     global main_flag
     main_flag=0
     while True:
+        print('Plot updating...')
+
         if os.path.basename(os.getcwd()) != 'event_data':
             try:
                 os.chdir("./event_data")
@@ -870,7 +884,13 @@ def plotupdate(obj):
 
         obj.imgsources = paths
         obj.descs = descripts
-        waittime=3600
+        
+        #Reload the images
+        for child in obj.ids:
+            if 'img' in str(child):
+                getattr(obj.ids,child).ids.image.reload()
+        
+        waittime=360
         i=0
         while i < waittime:
             if main_flag == 1:
@@ -1097,7 +1117,7 @@ class MainScreenv2(Screen):
     
     def notif_off(self):
         self.notif_light_var = 0
-        print(self.notif_light_current)
+#        print(self.notif_light_current)
         if pixels:
             type_notif(self.notif_light_current)
     
@@ -1147,7 +1167,7 @@ class MainScreenv2(Screen):
             tokens=[InitialToken,EventTypeToken,FalseAlarmToken,DistanceLookBackToken]
         renderthreads = []
         def render_audio(token,num):
-            print(token)
+#            print(token)
             tts=gTTS(token)
             tts.save('readout'+num+'.mp3')
             

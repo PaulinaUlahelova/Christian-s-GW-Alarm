@@ -1165,6 +1165,7 @@
     rows:2
     padding:15,1
     AsyncImage:
+        id:image
         source:root.imsource
         size_hint_y:0.8
     ScrollView:
@@ -1259,12 +1260,15 @@
             direction:'right'
             size_hint_y:0.8
             PlotContainer:
+                id:img1
                 imsource:root.imgsources[0]
                 desc:root.descs[0]
             PlotContainer:
+                id:img2
                 imsource:root.imgsources[1]
                 desc:root.descs[1]
             PlotContainer:
+                id:img3
                 imsource:root.imgsources[2]
                 desc:root.descs[2]
             
