@@ -21,4 +21,4 @@ else
 	sed -i -e 's/mtdev_%(name)s/#mtdev_%(name)s/g' ~/.kivy/config.ini
 	sed -i -e 's/hid_%(name)s/#hid_%(name)s/g' ~/.kivy/config.ini
 fi
-sudo -E python3 ./GWalarm_screens.py
+sudo -E python3 /home/pi/Documents/GIT/gwalarm/GWalarm_screens.py
