@@ -735,6 +735,19 @@ class EventContainer(ButtonBehavior,GridLayout):
 def statusupdate(obj):
     global main_flag
     main_flag=0
+    
+    if pixels:
+        def color_all(color):
+            for i in range(2,6):
+                pixels[i] = color
+            pixels.show()
+            time.sleep(1)
+        
+        startup_cycle = ((255,0,0),(0,255,0),(0,0,255))
+        for col in startup_cycle:
+            color_all(col)
+       
+        print('Detector status LED init complete...')
     while True:
         data,stats,names = statusdetect()
         
