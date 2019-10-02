@@ -938,6 +938,8 @@
     part1info:['HasRemnant','HasNS']
     part2info:['GraceID','Distance','FAR','DetectionTime','UpdateTime','Instruments']
     part3info:['BBH','BNS','NSBH','MassGap','Terrestrial']
+    keycolors:[[202/255,214/255,235/255,1],[179/255,242/255,183/255,1],[238/255,242/255,179/255,1],[231/255,179/255,242/255,1],[242/255,179/255,179/255,1]]
+
     var:1
     namelist: ['AlertType', 'BBH', 'BNS', 'DetectionTime', 'Distance', 'FAR', 'GraceID', 'Group', 'HasNS', 'HasRemnant', 'Instruments', 'MassGap', 'NSBH', 'Revision', 'Terrestrial', 'UpdateTime', 'skymap']
     row: ['Initial', '100.000%', '<0.1%', '2019-04-08 at 18:18:02', '1472.901 +- 357.875 Mpc', 'One every 11.28 Billion years', 'S190408an', 'CBC', '< 0.1%', '12.00%', 'H1,L1,V1', '<0.1%', '<0.1%', '2', '<0.1%', '2019-04-08 at 20:21:42', 'S190408an.png']
@@ -1105,25 +1107,25 @@
                             points: [self.x+self.width+1,self.y+self.height,self.x,self.y+self.height,self.x,self.y,self.x+self.width+1,self.y]
                     InfoLabel:
                         text:root.part3info[0] + ':' + root.rowdict[root.part3info[0]]
-                        bg_col:(44/255,160/255,44/255,1)
-                        color:1,1,1,1
+                        bg_col:root.keycolors[0]
+                        color:0,0,0,1
                     InfoLabel:
                         text:root.part3info[1] + ':' + root.rowdict[root.part3info[1]]
-                        bg_col:(31/255,119/255,180/255,1)
-                        color:1,1,1,1
+                        bg_col:root.keycolors[1]
+                        color:0,0,0,1
 
                     InfoLabel:
                         text: root.part3info[2] + ':' + root.rowdict[root.part3info[2]]
-                        bg_col:(1,127/255,14/255,1)
-                        color:1,1,1,1
+                        bg_col:root.keycolors[2]
+                        color:0,0,0,1
                     InfoLabel:
                         text:root.part3info[3] + ':' + root.rowdict[root.part3info[3]]
-                        bg_col:(214/255,39/255,40/255,1)
-                        color:1,1,1,1
+                        bg_col:root.keycolors[3]
+                        color:0,0,0,1
                     InfoLabel:
                         text: root.part3info[4] + ':' + root.rowdict[root.part3info[4]]
-                        bg_col:(148/255,103/255,189/255,1)
-                        color:1,1,1,1
+                        bg_col:root.keycolors[4]
+                        color:0,0,0,1
 
             GridLayout:
                 rows:2

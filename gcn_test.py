@@ -273,7 +273,13 @@ def process_gcn(payload, root):
         #save the pie of possibilities
         specindex = np.argmax(vals)
         fig1, ax1 = plt.subplots(figsize=(4,4))
-        ax1.pie(vals,labels=None,wedgeprops=dict(width=0.5))
+        
+        colors= [[202/255,214/255,235/255,1],[179/255,242/255,183/255,1],
+                 [238/255,242/255,179/255,1],[231/255,179/255,242/255,1],
+                 [242/255,179/255,179/255,1]]
+
+        
+        ax1.pie(vals,labels=None,wedgeprops=dict(width=0.5),colors=colors)
         ax1.axis('equal')
     #    plt.text(0,0.1,'Type:',fontsize=20,transform=ax1.transAxes)
     #    plt.text(0,0,order[specindex],fontsize=20,transform=ax1.transAxes)
