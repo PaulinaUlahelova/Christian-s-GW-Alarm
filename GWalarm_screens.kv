@@ -665,12 +665,6 @@
     names:['torep','torep']
     current_key:'None'
     current_sort:'Time Descending'
-    canvas.before:
-        Color:
-            rgba: [0.9,0.9,0.9,1]
-        Rectangle:
-            pos:self.pos
-            size:self.size
 
     GridLayout:
         rows:5
@@ -766,6 +760,12 @@
         RV:
             id:rv
             size_hint:1,0.79
+            canvas.before:
+                Color:
+                    rgba: [0.9,0.9,0.9,1]
+                Rectangle:
+                    pos:self.pos
+                    size:self.size
         BoxLayout:
             padding:0,2,0,0
             size_hint_y:0.08
@@ -947,12 +947,12 @@
     
     background_color: [.2,.2,.4,1]
     
-    canvas.before:
-        Color:
-            rgba:1,1,1,1
-        Rectangle:
-            pos:self.pos
-            size:self.size
+#    canvas.before:
+#        Color:
+#            rgba:1,1,1,1
+#        Rectangle:
+#            pos:self.pos
+#            size:self.size
     canvas:
         Color:
             rgba:0,0,0,1

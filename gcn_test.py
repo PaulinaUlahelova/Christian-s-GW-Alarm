@@ -121,7 +121,7 @@ def process_gcn(payload, root):
         print(params['GraceID'] +' event adding...')
     h5file.close()
     
-    lookoutfor = ['BBH','BNS','MassGap','NSBH','Terrestrial']
+    lookoutfor = ['BBH','BNS','NSBH','MassGap','Terrestrial']
     lookoutfor2=['HasNS','HasRemnant']
     order = []
     order2=[]
@@ -185,7 +185,7 @@ def process_gcn(payload, root):
     finaldist = dist + ' +- '+diststd + ' Mpc'
 
     while True:
-        try:
+        try: 
             h5file = open_file("Event Database",mode="a",title="eventinfo")
             break
         except:
@@ -206,7 +206,7 @@ def process_gcn(payload, root):
             table = h5file.create_table(h5file.root.events,params['GraceID'],Event,'CBC event')
         except:
             table=h5file.get_node("/events",params['GraceID'])
-    else:
+    else: 
         try:
             table = h5file.create_table(h5file.root.events,'EventSimulation',Event,'Simulation')
         except:
@@ -270,16 +270,24 @@ def process_gcn(payload, root):
     if sim:  
         pass
     else:
+        #sort the pie values for correct colors
+        sort_ints = []
+        for cat in order:
+            for i,item in enumerate(lookoutfor):
+                if cat in item:
+                    sort_ints.append(i)
+        sorted_vals = [x for _,x in sorted(zip(sort_ints,vals))]
+        
         #save the pie of possibilities
         specindex = np.argmax(vals)
         fig1, ax1 = plt.subplots(figsize=(4,4))
         
-        colors= [[202/255,214/255,235/255,1],[179/255,242/255,183/255,1],
-                 [238/255,242/255,179/255,1],[231/255,179/255,242/255,1],
-                 [242/255,179/255,179/255,1]]
+        colors= [[202,214,235,1],[179,242,183,1],
+                 [238,242,179,1],[231,179,242,1],
+                 [242,179,179,1]]
 
         
-        ax1.pie(vals,labels=None,wedgeprops=dict(width=0.5),colors=colors)
+        ax1.pie(sorted_vals,labels=None,wedgeprops=dict(width=0.5),colors=colors)
         ax1.axis('equal')
     #    plt.text(0,0.1,'Type:',fontsize=20,transform=ax1.transAxes)
     #    plt.text(0,0,order[specindex],fontsize=20,transform=ax1.transAxes)

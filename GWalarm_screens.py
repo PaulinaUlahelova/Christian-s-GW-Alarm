@@ -660,7 +660,7 @@ class InfoPop(Screen):
         self.manager.get_screen('sky').imgsource=self.rowdict['skymap']
         self.manager.current = 'sky'
     def gloss_open(self):
-        descdict = {'GraceID': 'Identifier in GraceDB', 'AlertType': 'VOEvent alert type', 
+        descdict = {'GraceID': 'Identifier in GraceDB',
             'Instruments': 'List of instruments used in analysis to identify this event', 
             'FAR': 'False alarm rate for GW candidates with this strength or greater', 
             'Group': 'Data analysis working group', 
@@ -757,7 +757,7 @@ def statusupdate(obj):
         '''LED CONTROL'''
         if pixels:
             order = ['GEO 600','LIGO Livingston','LIGO Hanford','Virgo']
-            statindexes = [names.index(item) for item in order]
+            statindexes = [names.index(item) for item in order] 
             stats = [x for _,x in sorted(zip(statindexes,stats))]
 
             for i,stat in enumerate(stats):
@@ -903,7 +903,7 @@ def plotupdate(obj):
             if 'img' in str(child):
                 getattr(obj.ids,child).ids.image.reload()
         
-        waittime=360
+        waittime=1800
         i=0
         while i < waittime:
             if main_flag == 1:
