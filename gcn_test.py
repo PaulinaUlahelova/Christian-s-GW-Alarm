@@ -282,9 +282,9 @@ def process_gcn(payload, root):
         specindex = np.argmax(vals)
         fig1, ax1 = plt.subplots(figsize=(4,4))
         
-        colors= [[202,214,235,1],[179,242,183,1],
-                 [238,242,179,1],[231,179,242,1],
-                 [242,179,179,1]]
+        colors= [[202/255,214/255,235/255,1],[179/255,242/255,183/255,1],
+                 [238/255,242/255,179/255,1],[231/255,179/255,242/255,1],
+                 [242/255,179/255,179/255,1]]
 
         
         ax1.pie(sorted_vals,labels=None,wedgeprops=dict(width=0.5),colors=colors)
