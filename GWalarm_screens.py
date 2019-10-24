@@ -81,7 +81,7 @@ if os.uname()[4][:3] == 'arm':
         import neopixel
         neoPin = board.D12
         num_leds = 8
-        pixels = neopixel.NeoPixel(neoPin,num_leds,pixel_order=neopixel.RGB,auto_write=False)
+        pixels = neopixel.NeoPixel(neoPin,num_leds,brightness=0.5,pixel_order=neopixel.RGB,auto_write=False)
         print('Hardware has been detected. Enabling...')
         
     else:
