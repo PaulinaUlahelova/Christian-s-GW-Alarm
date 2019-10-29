@@ -738,7 +738,7 @@ def statusupdate(obj):
     
     if pixels:
         def color_all(color):
-            for i in range(0,5):
+            for i in range(2,5):
                 pixels[i] = color
             pixels.show()
             time.sleep(1)
