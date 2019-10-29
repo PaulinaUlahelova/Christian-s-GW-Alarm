@@ -738,7 +738,7 @@ def statusupdate(obj):
     
     if pixels:
         def color_all(color):
-            for i in range(2,6):
+            for i in range(0,5):
                 pixels[i] = color
             pixels.show()
             time.sleep(1)
@@ -756,7 +756,8 @@ def statusupdate(obj):
         
         '''LED CONTROL'''
         if pixels:
-            order = ['GEO 600','LIGO Livingston','LIGO Hanford','Virgo']
+            #order = ['GEO 600','LIGO Livingston','LIGO Hanford','Virgo']    # prototype version LED configuration
+            order = ['Virgo','LIGO Hanford','LIGO Livingston','GEO 600']
             statindexes = [names.index(item) for item in order] 
             stats = [x for _,x in sorted(zip(statindexes,stats))]
 
@@ -916,15 +917,15 @@ def plotupdate(obj):
 def type_notif(e_type,flasher='off'):
     def color(event_type):
         if event_type == 'Terrestrial':
-            pixels[1] = (255,80,70)
+            pixels[6] = (255,80,70)
         elif event_type == 'NSBH':
-            pixels[1] = (255,255,25)
+            pixels[6] = (255,255,25)
         elif event_type == 'BBH':
-            pixels[1] = (122,180,255)
+            pixels[6] = (122,180,255)
         elif event_type == 'MassGap':
-            pixels[1] = (245,66,230)
+            pixels[6] = (245,66,230)
         elif event_type == 'BNS':
-            pixels[1] = (102,255,112)
+            pixels[6] = (102,255,112)
         pixels.show()
     if flasher == 'on':
         duration=10
@@ -933,7 +934,7 @@ def type_notif(e_type,flasher='off'):
         while j < duration:
             color(e_type)
             time.sleep(step)
-            pixels[1]=(0,0,0)
+            pixels[6]=(0,0,0)
             pixels.show()
             time.sleep(step)
             j+=step
@@ -1112,7 +1113,7 @@ class MainScreenv2(Screen):
         rand3 = round(random.random()*255)
                 
         while self.notif_light_var==1:
-            pixels[0] = (rand1,rand2,rand3)
+            pixels[7] = (rand1,rand2,rand3)
             pixels.show()
             time.sleep(0.005)
             rand1+=3
@@ -1125,7 +1126,7 @@ class MainScreenv2(Screen):
             if rand3 > 255:
                 rand3 -= 255
             
-        pixels[0] = (0,0,0)
+        pixels[7] = (0,0,0)
         pixels.show()
     
     def notif_off(self):
