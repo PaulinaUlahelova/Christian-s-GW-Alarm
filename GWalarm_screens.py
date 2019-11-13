@@ -909,7 +909,7 @@ def plotupdate(obj):
             if 'img' in str(child):
                 getattr(App.get_running_app().root.get_screen('status').ids,child).reload()
                 
-        waittime=1800
+        waittime=900
         i=0
         while i < waittime:
             if main_flag == 1:
