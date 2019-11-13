@@ -902,7 +902,12 @@ def plotupdate(obj):
         for child in obj.ids:
             if 'img' in str(child):
                 getattr(obj.ids,child).ids.image.reload()
-        
+                
+        #Reload the duty cycle image
+        for child in App.get_running_app().root.get_screen('status').ids:
+            if 'img' in str(child):
+                getattr(App.get_running_app().root.get_screen('status').ids,child).reload()
+                
         waittime=1800
         i=0
         while i < waittime:

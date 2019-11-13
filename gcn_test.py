@@ -73,6 +73,13 @@ def process_gcn(payload, root):
               for elem in root.iterfind('.//Param')}
     descs = [elem.text for elem in root.iterfind('.//Description')]
     
+    if params['AlertType'] != 'Retraction':
+        #We must first filter out retractions, as they do not have a listed 
+        #group' and will flag an error.
+        if params['Group'] != 'CBC':
+            print(params['GraceID']+' is of type ' + params['Group']+'. Ignoring...')
+            return
+    
     while True:
         try:
             h5file = open_file("Event Database",mode="a",title="eventinfo")
@@ -100,7 +107,7 @@ def process_gcn(payload, root):
     #Check if the current revision of this event exists - if it does, nothing else needs to be done!  
     if params['AlertType'] == 'Retraction':
         #Remove the event info if a retraction is issued - we don't care anymore
-        print(params['GraceID'],' retracted.')
+        print(params['GraceID'],'retracted.')
         try:
             h5file.remove_node("/events",params['GraceID'])
         except:
@@ -195,10 +202,6 @@ def process_gcn(payload, root):
     except NodeError:
         pass
 
-
-    if params['Group'] != 'CBC':
-        return
-    
     widgetids= [node.name for node in h5file.list_nodes("/events")]
 
     if sim == False:
