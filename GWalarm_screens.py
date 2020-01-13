@@ -135,10 +135,11 @@ class Event(IsDescription):
 global flag
 global main_flag
 global newevent_flag
+global rebuild_flag
 flag = 0
 main_flag=0
 newevent_flag=0
-
+rebuild_flag=0
 
 
 class HisColLabel(ToggleButtonBehavior,Label):
@@ -527,10 +528,23 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
             def update_sort_type():
                 App.get_running_app().root.get_screen('history').current_sort=sorttype
             Clock.schedule_once(lambda dt: update_sort_type())
+            
             for table in tables:
                 if 'EventSimulation' in table.name:
                     continue
-                row=table[-1]
+                try:
+                    row=table[-1]
+                except:
+                    print('Empty table error for event:',table.name+'. Rebuilding the file. This may take a while...')
+                    h5file.close()
+                    global rebuild_flag
+                    rebuild_flag = 1
+                    pop = RebuildPop()
+                    pop.open()
+                    sync_database()
+                    rebuild_flag = 0
+                    return
+                
                 if 'Time' in sorttype:
                     sort_vars.append(row['UpdateTime'].decode().split()[0])
                 elif 'Distance' in sorttype:
@@ -542,7 +556,7 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                     sort_vars.append(float(row['FAR'].decode()))#.split()[2]))
                 elif 'Instruments' in sorttype:
                     sort_vars.append(row['Instruments'].decode())
-            if sort_vars != []:
+            if sort_vars != []: 
                 if 'Descending' in sorttype:
                     try:
                         tables = [x for _,x in reversed(sorted(zip(sort_vars,tables)),key=len[0])]
@@ -989,7 +1003,6 @@ class MainScreenv2(Screen):
         global newevent_flag
         if newevent_flag == 0:
             #don't start if it's not safe
-
             
             def process():
                 payload=open("EventDemonstration.xml",'rb').read()
@@ -1201,6 +1214,19 @@ class MainScreenv2(Screen):
         maximum = k
         for i in range(maximum+1):
             os.system("mpg321 --stereo readout"+str(i)+".mp3")
+        
+class RebuildPop(ModalView):
+    def waiting(self):
+        global rebuild_flag
+        print('opened')
+        while rebuild_flag == 1:
+            print('waiting')
+            time.sleep(1)
+        print('done')
+        self.dismiss()
+    def opened(self):
+        rebuild_thread = threading.Thread(target=self.waiting)
+        rebuild_thread.start()
         
 class StatusScreenv2(Screen):
     det1props = ListProperty()

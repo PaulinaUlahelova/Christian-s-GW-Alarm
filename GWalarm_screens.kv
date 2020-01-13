@@ -18,6 +18,18 @@
     size_hint_y: None
     height: dp(2)
 
+<RebuildPop@ModalView>:
+    size_hint:0.6,0.6
+    auto_dismiss:False
+    on_pre_open:self.opened()
+    Label:
+        text:'Rebuilding database due to error. Please wait.'
+        font_size:dp(20)
+        color:1,1,1,1
+        size_hint_x:0.5
+    
+        
+
 <LabButton@ButtonBehavior+GridLayout>:
     name:'default'
     imgsource:'./IGR.jpg'
