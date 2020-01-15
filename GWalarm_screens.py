@@ -371,9 +371,16 @@ class HistoryScreenv2(Screen):
         
     def stupid(obj):
         def wait_and_close(pop):
+            global flag
+            flag = 1
             pop.content.unbind(on_press=wait_and_close)
             pop.content.text='Updating. \nPlease wait.'
             Clock.schedule_once(lambda dt:sync_database(),0)
+            his = App.get_running_app().root.get_screen('history')
+            histhread = threading.Thread(target=historyUpdatev2,args=(his.ids.rv,
+                                                         his.names,his.specialnames,his.lookoutfor,
+                                                         his.backcolors,'Time Descending'),daemon=True)
+            histhread.start()
             pop.dismiss()
         content = Button(text='Update Database \n(takes time)',halign='center')
         confirm = Popup(title='Are you sure?',content=content,size_hint=(0.4,0.4))
@@ -629,7 +636,7 @@ def historyUpdatev2(rv,names,specialnames,lookoutfor,backcolors,sorttype='Time D
                 
                 if i == 0 and sorttype == 'Time Descending':
                     rv.winner = lookoutfor[np.argmax(stats)]
-                
+                    print(rv.winner)
             rv.data = new_data
             
             print('Event History Updated...')
